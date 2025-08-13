@@ -1,4 +1,5 @@
 package LimitOrderBook;
+
 public class Order {
 
     int orderId; // unique for each order
@@ -11,7 +12,7 @@ public class Order {
 
     Order nextOrder; // next order in the list
     Order prevOrder; // previous order in the list
-    Limit parentLimit;
+    private Limit parentLimit;
 
     public Order(int orderId, boolean buySell, int userId, double price, int shares, long entryTime) {
         this.orderId = orderId;
@@ -22,7 +23,14 @@ public class Order {
         this.entryTime = entryTime;
         this.nextOrder = null;
         this.prevOrder = null;
-        // this.parentLimit = parentLimit;
+    }
+
+    public void setLimit(Limit limit) {
+        this.parentLimit = limit;
+    }
+
+    public Limit getLimit() {
+        return parentLimit;
     }
 
     public String toString() {

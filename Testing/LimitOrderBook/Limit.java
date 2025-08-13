@@ -10,10 +10,6 @@ public class Limit {
     private double price; // price of the list
     private int size; // has size of the list
 
-    Limit left;
-    Limit right;
-    // left and right nodes of BST
-
     public Limit(double price) {
         // initialize class variables
         this.price = price;
