@@ -13,6 +13,7 @@ public class LOB {
     }
 
     public Order placeOrder(int orderId, boolean buySell, int userId, double price, int shares) {
+        // place order
 
         if (!orderMap.containsKey(orderId)) {
             long entryTime = date.getTime();

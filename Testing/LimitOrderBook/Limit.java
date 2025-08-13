@@ -1,10 +1,14 @@
 package LimitOrderBook;
-public class Limit {
+import java.util.*;
 
-    Order head; // points to 1st order
-    Order tail; // points to last order
-    double price; // price of the list
-    int size; // has size of the list
+public class Limit {
+    // Limit is a linked list 
+    // we could have used min heap but then canceling and removing some order from inbetween would have been a problem
+
+    private Order head; // points to 1st order
+    private Order tail; // points to last order
+    private double price; // price of the list
+    private int size; // has size of the list
 
     Limit left;
     Limit right;
@@ -20,6 +24,7 @@ public class Limit {
 
     public void insert(Order order) {
         // insert element at the end
+        // order placed first should be executed 1st
         if (head == null) {
             head = order;
             tail = head;
@@ -36,6 +41,7 @@ public class Limit {
 
     public Order delete(int orderId) {
         // delete order from anywhere in the list
+        // ideally order will be deleted only when executed but sometimes user might also cancel the order
         if (head == null) {
             System.out.println("No Order");
             return null;
@@ -85,7 +91,7 @@ public class Limit {
     }
 
     public int getSize() {
-        // tells if list is empty
+        // returns size of the list
         return size;
     }
 
@@ -94,12 +100,55 @@ public class Limit {
         return price;
     }
 
-    public void display(){
+    public void display() {
+        // will display entire linked list
+        Order temp = head;
+        while (temp != null) {
+            System.out.println(temp.toString());
+            temp = temp.nextOrder;
+        }
+    }
 
+    public Order getHead(){
+        // return 1st order
+        return head;
+    }
+
+    public Order getTail(){
+        // return last order
+        return tail;
+    }
+
+    public Order getOrder(int orderId) {
+        // will return individul order
+        if(head.orderId==orderId){
+            return getHead();
+        }
+        if(tail.orderId==orderId){
+            return getTail();
+        }
+        Order temp = head;
+        while (temp.orderId != orderId && temp != null) {
+            temp = temp.nextOrder;
+        }
+        return temp;
+    }
+
+    public void sort(){
+        // sort the orders in list in ascending order of time placed
+        // sorts linked list in O(nlogn) time
+        // space complexity O(N)
+        ArrayList<Order> newList=new ArrayList<>();
         Order temp=head;
         while(temp!=null){
-            System.out.println(temp.toString());
-            temp=temp.nextOrder;
+            newList.add(temp);
+        }
+        newList.sort((a,b)->Double.compare(a.entryTime,b.entryTime));
+        head=null;
+        tail=null;
+
+        for(Order order:newList){
+            insert(order);
         }
     }
 
