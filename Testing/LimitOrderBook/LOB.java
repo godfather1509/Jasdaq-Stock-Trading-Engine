@@ -3,6 +3,8 @@ import java.util.*;
 
 public class LOB {
 
+    // In market an order only becomes trade when it is executed(bought/sold)
+
     HashMap<Integer, Order> orderMap = new HashMap<>();
     HashMap<Double, Limit> limitMap = new HashMap<>();
     Date date;

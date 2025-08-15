@@ -3,18 +3,24 @@ import java.util.*;
 
 public class Limit {
     // Limit is a linked list 
-    // we could have used min heap but then canceling and removing some order from inbetween would have been a problem
+    // we could have used min heap but then canceling and removing some order from inbetween would have been a time cosuming
 
     private Order head; // points to 1st order
     private Order tail; // points to last order
     private double price; // price of the list
     private int size; // has size of the list
 
+    Limit right; // pointer to right limit 
+    Limit left; // pointer to left limit
+    String color; // holds color of node
+    int height; // height of tree from root to this node
+
     public Limit(double price) {
         // initialize class variables
         this.price = price;
         this.head = null;
         this.tail = null;
+        this.color="R";
         size = 0;
     }
 
