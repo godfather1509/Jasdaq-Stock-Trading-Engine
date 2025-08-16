@@ -3,7 +3,6 @@ package LimitOrderBook;
 public class Order {
 
     int orderId; // unique for each order
-    int userId; // Id of each user
     boolean buySell; // buy=true, sell=false
     int shares; // no of shares
     double price; // price of order
@@ -14,9 +13,8 @@ public class Order {
     Order prevOrder; // previous order in the list
     private Limit parentLimit;
 
-    public Order(int orderId, boolean buySell, int userId, double price, int shares, long entryTime) {
+    public Order(int orderId, boolean buySell,  double price, int shares, long entryTime) {
         this.orderId = orderId;
-        this.userId = userId;
         this.buySell = buySell;
         this.shares = shares;
         this.price = price;
@@ -38,7 +36,7 @@ public class Order {
         // String order="Order id:"+orderId+"\n"+"user id:"+userId+"\n"+"Buy or sell";
 
         String order = String.format("Order id:%d, User id:%d, Buy or Sell:%B, Shares:%d, Price:%f, Entry time:%d",
-                orderId, userId, buySell, shares, price, entryTime);
+                orderId, buySell, shares, price, entryTime);
 
         return order;
     }

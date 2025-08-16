@@ -1,17 +1,20 @@
 package LimitOrderBook;
+
 import java.util.*;
 
 public class Limit {
-    // Limit is a linked list 
-    // we could have used min heap but then canceling and removing some order from inbetween would have been a time cosuming
+    // Limit is a linked list
+    // we could have used min heap but then canceling and removing some order from
+    // inbetween would have been a time cosuming
 
     private Order head; // points to 1st order
     private Order tail; // points to last order
     private double price; // price of the list
     private int size; // has size of the list
 
-    Limit right; // pointer to right limit 
+    Limit right; // pointer to right limit
     Limit left; // pointer to left limit
+    Limit parent; // parent of the current node
     String color; // holds color of node
     int height; // height of tree from root to this node
 
@@ -20,7 +23,8 @@ public class Limit {
         this.price = price;
         this.head = null;
         this.tail = null;
-        this.color="R";
+        this.color = "R";
+        // initialize color of the node as Red
         size = 0;
     }
 
@@ -43,7 +47,8 @@ public class Limit {
 
     public Order delete(int orderId) {
         // delete order from anywhere in the list
-        // ideally order will be deleted only when executed but sometimes user might also cancel the order
+        // ideally order will be deleted only when executed but sometimes user might
+        // also cancel the order
         if (head == null) {
             System.out.println("No Order");
             return null;
@@ -92,6 +97,48 @@ public class Limit {
         return temp;
     }
 
+    public void display() {
+        // will display entire linked list
+        Order temp = head;
+        while (temp != null) {
+            System.out.println(temp.toString());
+            temp = temp.nextOrder;
+        }
+    }
+
+    public Order getOrder(int orderId) {
+        // will return individul order
+        if (head.orderId == orderId) {
+            return getHead();
+        }
+        if (tail.orderId == orderId) {
+            return getTail();
+        }
+        Order temp = head;
+        while (temp.orderId != orderId && temp != null) {
+            temp = temp.nextOrder;
+        }
+        return temp;
+    }
+
+    public void sort() {
+        // sort the orders in list in ascending order of time placed
+        // sorts linked list in O(nlogn) time
+        // space complexity O(N)
+        ArrayList<Order> newList = new ArrayList<>();
+        Order temp = head;
+        while (temp != null) {
+            newList.add(temp);
+        }
+        newList.sort((a, b) -> Double.compare(a.entryTime, b.entryTime));
+        head = null;
+        tail = null;
+
+        for (Order order : newList) {
+            insert(order);
+        }
+    }
+
     public int getSize() {
         // returns size of the list
         return size;
@@ -102,56 +149,29 @@ public class Limit {
         return price;
     }
 
-    public void display() {
-        // will display entire linked list
-        Order temp = head;
-        while (temp != null) {
-            System.out.println(temp.toString());
-            temp = temp.nextOrder;
-        }
-    }
-
-    public Order getHead(){
+    public Order getHead() {
         // return 1st order
         return head;
     }
 
-    public Order getTail(){
+    public Order getTail() {
         // return last order
         return tail;
     }
 
-    public Order getOrder(int orderId) {
-        // will return individul order
-        if(head.orderId==orderId){
-            return getHead();
-        }
-        if(tail.orderId==orderId){
-            return getTail();
-        }
-        Order temp = head;
-        while (temp.orderId != orderId && temp != null) {
-            temp = temp.nextOrder;
-        }
-        return temp;
+    public boolean isLeftChild() {
+        // check if current limit node is left child of it parent
+        return this == parent.left;
     }
 
-    public void sort(){
-        // sort the orders in list in ascending order of time placed
-        // sorts linked list in O(nlogn) time
-        // space complexity O(N)
-        ArrayList<Order> newList=new ArrayList<>();
-        Order temp=head;
-        while(temp!=null){
-            newList.add(temp);
-        }
-        newList.sort((a,b)->Double.compare(a.entryTime,b.entryTime));
-        head=null;
-        tail=null;
+    public void flipColor() {
+        // this will flip the color of the node
+        setColor(color == "R" ? "B" : "R");
+    }
 
-        for(Order order:newList){
-            insert(order);
-        }
+    public void setColor(String color) {
+        // set color
+        this.color = color;
     }
 
 }

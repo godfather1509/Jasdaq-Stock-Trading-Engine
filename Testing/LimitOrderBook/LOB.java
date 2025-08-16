@@ -1,4 +1,5 @@
 package LimitOrderBook;
+
 import java.util.*;
 
 public class LOB {
@@ -14,24 +15,40 @@ public class LOB {
         date = new Date();
     }
 
-    public Order placeOrder(int orderId, boolean buySell, int userId, double price, int shares) {
+    public Order placeOrder(int orderId, boolean buySell, double price, int shares) {
         // place order
 
         if (!orderMap.containsKey(orderId)) {
             long entryTime = date.getTime();
-            Limit limit;
-            order = new Order(orderId, buySell, userId, price, shares, entryTime);
-            orderMap.put(orderId, order);
-            if (!limitMap.containsKey(price)) {
-                limit = new Limit(price);
-                limit.insert(order);
-                limitMap.put(price, limit);
-            } else {
-                limit = limitMap.get(price);
-                limit.insert(order);
+            order = new Order(orderId, buySell, price, shares, entryTime);
+            if (buySell) {
+                Limit buyLimit;
+                orderMap.put(orderId, order);
+                if (!limitMap.containsKey(price)) {
+                    buyLimit = new Limit(price);
+                    buyLimit.insert(order);
+                    limitMap.put(price, buyLimit);
+                } else {
+                    buyLimit = limitMap.get(price);
+                    buyLimit.insert(order);
+                }
+                System.out.println("Order Placed");
+                // limit.display();
+            } else if (!buySell) {
+                Limit sellLimit;
+                orderMap.put(orderId, order);
+                if (!limitMap.containsKey(price)) {
+                    sellLimit = new Limit(price);
+                    sellLimit.insert(order);
+                    limitMap.put(price, sellLimit);
+                } else {
+                    sellLimit = limitMap.get(price);
+                    sellLimit.insert(order);
+                }
+                System.out.println("Order Placed");
+                // limit.display();
             }
-            System.out.println("Order Placed");
-            // limit.display();
+
             return order;
         } else {
             System.out.println("Order with orderId " + orderId + " already exists");
