@@ -13,7 +13,7 @@ public class Order {
     Order prevOrder; // previous order in the list
     private Limit parentLimit;
 
-    public Order(int orderId, boolean buySell,  double price, int shares, long entryTime) {
+    public Order(int orderId, boolean buySell, double price, int shares, long entryTime) {
         this.orderId = orderId;
         this.buySell = buySell;
         this.shares = shares;
@@ -35,7 +35,7 @@ public class Order {
 
         // String order="Order id:"+orderId+"\n"+"user id:"+userId+"\n"+"Buy or sell";
 
-        String order = String.format("Order id:%d, User id:%d, Buy or Sell:%B, Shares:%d, Price:%f, Entry time:%d",
+        String order = String.format("Order id:%d,Buy or Sell:%B, Shares:%d, Price:%f, Entry time:%d",
                 orderId, buySell, shares, price, entryTime);
 
         return order;

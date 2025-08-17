@@ -10,6 +10,8 @@ public class LOB {
     HashMap<Double, Limit> limitMap = new HashMap<>();
     Date date;
     Order order;
+    LimitsRBTree buyTree = new LimitsRBTree(true);
+    LimitsRBTree sellTree = new LimitsRBTree(false);
 
     public LOB() {
         date = new Date();
@@ -19,40 +21,56 @@ public class LOB {
         // place order
 
         if (!orderMap.containsKey(orderId)) {
-            long entryTime = date.getTime();
+            long entryTime = date.getTime(); // get time when order is placed
             order = new Order(orderId, buySell, price, shares, entryTime);
             if (buySell) {
+                // if buy order
                 Limit buyLimit;
-                orderMap.put(orderId, order);
+                orderMap.put(orderId, order); // insert order in order map
+
                 if (!limitMap.containsKey(price)) {
+                    // if limitMap does not contains price level
                     buyLimit = new Limit(price);
-                    buyLimit.insert(order);
-                    limitMap.put(price, buyLimit);
+                    buyLimit.insert(order);// inser torder in new limit
+                    limitMap.put(price, buyLimit); // add new limit to limit map
+                    buyTree.insert(buyLimit);
                 } else {
                     buyLimit = limitMap.get(price);
                     buyLimit.insert(order);
                 }
-                System.out.println("Order Placed");
                 // limit.display();
+                // buyTree.display();
             } else if (!buySell) {
                 Limit sellLimit;
-                orderMap.put(orderId, order);
+                orderMap.put(orderId, order); // add order to order map
                 if (!limitMap.containsKey(price)) {
-                    sellLimit = new Limit(price);
-                    sellLimit.insert(order);
-                    limitMap.put(price, sellLimit);
+                    // if limit map contains limit with given price
+                    sellLimit = new Limit(price); // initialize new limit list
+                    sellLimit.insert(order); // insert new sell order in list
+                    limitMap.put(price, sellLimit); // put limit in limit map
+                    sellTree.insert(sellLimit);
                 } else {
                     sellLimit = limitMap.get(price);
                     sellLimit.insert(order);
                 }
-                System.out.println("Order Placed");
                 // limit.display();
+                // sellTree.display();
             }
-
+            System.out.println("Order Placed");
             return order;
         } else {
             System.out.println("Order with orderId " + orderId + " already exists");
             return null;
         }
     }
+
+    public void execute() {
+        System.out.println("Best buy price:" + buyTree.bestPrice().getPrice());
+        System.out.println("Best sell price:" + sellTree.bestPrice().getPrice());
+        System.out.println("Buy tree:");
+        buyTree.display();
+        System.out.println("Sell tree:");
+        sellTree.display();
+    }
+
 }

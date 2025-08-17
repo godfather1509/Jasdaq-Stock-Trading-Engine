@@ -27,13 +27,56 @@ public class LimitsRBTree {
 
   /** Root of the RB tree */
   private Limit root;
+  private boolean buySell;
 
-  public double bestBuyPrice() {
-    Limit x = root;
-    while (x.right != null) {
-      x = x.right;
+  public LimitsRBTree(boolean buySell) {
+    // id its true then it is a buy tree else it is false tree
+    this.buySell = buySell;
+    // buy true
+    // sell false
+  }
+
+  public Limit bestPrice() {
+    if (root != null) {
+      Limit x = root;
+      if (buySell) {
+        while (x.right != null) {
+          x = x.right;
+        }
+        return x;
+      } else {
+        while (x.left != null) {
+          x = x.left;
+        }
+        return x;
+      }
+    } else {
+      System.out.println("Tree is Empty");
+      return null;
     }
-    return x.getPrice();
+  }
+
+  public Limit nextBestPrice() {
+    // return next best price
+    Limit limit = bestPrice();
+    return limit.parent;
+  }
+
+  public void display() {
+    if (root == null) {
+      System.out.println("Tree is empty");
+      return;
+    }
+    display(root, "Root node");
+  }
+
+  public void display(Limit limit, String details) {
+    if (limit == null) {
+      return;
+    }
+    System.out.println(details + limit.getPrice());
+    display(limit.right, "Right node:");
+    display(limit.left, "Left node:");
   }
 
   /** Insert the given Limit node by price (new nodes are colored RED). */

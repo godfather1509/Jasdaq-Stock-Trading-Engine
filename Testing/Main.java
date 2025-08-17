@@ -5,13 +5,17 @@ public class Main {
 
         LOB lob = new LOB();
 
-        for (int i = 0; i < 10; i++) {
-            if (i % 2 == 0) {
-                lob.placeOrder(i, true, i * 2, (i + 1) * 10);
-            } else {
-                lob.placeOrder(i, false, i * 2, (i + 1) * 10);
-            }
+        for (int i = 0; i < 100; i++) {
+            lob.placeOrder(i, true, i * 2, (i + 1) * 10);
+            // buy stock
         }
+
+        for (int i = 100; i < 200; i++) {
+            lob.placeOrder(i, false, i * 2, (i + 1) * 10);
+            // sell stock
+        }
+
+        lob.execute();
 
     }
 
