@@ -9,8 +9,9 @@ public class Limit {
 
     private Order head; // points to 1st order
     private Order tail; // points to last order
-    private double price; // price of the list
+    private double unitPrice; // price of the list
     private int size; // has size of the list
+    private boolean buySell;
 
     Limit right; // pointer to right limit
     Limit left; // pointer to left limit
@@ -18,9 +19,10 @@ public class Limit {
     String color; // holds color of node
     int height; // height of tree from root to this node
 
-    public Limit(double price) {
+    public Limit(double unitPrice, boolean buySell) {
         // initialize class variables
-        this.price = price;
+        this.unitPrice=unitPrice;
+        this.buySell=buySell;
         this.head = null;
         this.tail = null;
         this.color = "R";
@@ -146,7 +148,7 @@ public class Limit {
 
     public double getPrice() {
         // returns price associated with this linked list
-        return price;
+        return unitPrice;
     }
 
     public Order getHead() {
@@ -174,4 +176,12 @@ public class Limit {
         this.color = color;
     }
 
+    public boolean isEmpty() {
+        // will tell if list is empty or not
+        return head == null;
+    }
+
+    public boolean getLimit(){
+        return buySell;
+    }
 }

@@ -62,6 +62,11 @@ public class LimitsRBTree {
     return limit.parent;
   }
 
+  public boolean isEmpty() {
+    // tells if tree is empty
+    return root == null;
+  }
+
   public void display() {
     if (root == null) {
       System.out.println("Tree is empty");
