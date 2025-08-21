@@ -30,7 +30,7 @@ public class LimitsRBTree {
   private boolean buySell;
 
   public LimitsRBTree(boolean buySell) {
-    // id its true then it is a buy tree else it is false tree
+    // if its true then it is a buy tree else it is sell tree
     this.buySell = buySell;
     // buy true
     // sell false

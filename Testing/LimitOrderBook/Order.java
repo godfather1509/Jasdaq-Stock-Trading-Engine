@@ -4,33 +4,30 @@ public class Order {
 
     final int orderId; // unique for each order
     boolean buySell; // buy=true, sell=false
+    boolean marketLimit; // market= true, limit= false
     int shares; // no of shares
-    double price; // price of order
+    long price; // price per share
     long entryTime; // time when order was placed
-    int eventTime; // time when order was executed
-    double unitPrice;
+    long eventTime; // time when order was executed
 
     Order nextOrder; // next order in the list
     Order prevOrder; // previous order in the list
     private Limit parentLimit;
 
-    public Order(int orderId, boolean buySell, double price,double unitPrice ,int shares, long entryTime) {
+    public Order(int orderId, boolean buySell, long price ,int shares, long entryTime, boolean marketLimit) {
         this.orderId = orderId;
         this.buySell = buySell;
+        this.marketLimit=marketLimit;
         this.shares = shares;
         this.price = price;
         this.entryTime = entryTime;
         this.nextOrder = null;
         this.prevOrder = null;
-        this.unitPrice=unitPrice;
     }
 
-    public double getPrice(){
+    public long getPrice(){
+        // returns price per share
         return price;
-    }
-
-    public double getUnitPrice(){
-        return unitPrice;
     }
 
     public void setLimit(Limit limit) {
@@ -42,8 +39,8 @@ public class Order {
     }
 
     public String toString() {
-        String order = String.format("Order id:%d,Buy or Sell:%B, Shares:%d, Price:%f, Entry time:%d",
-                orderId, buySell, shares, price, entryTime);
+        String order = String.format("Order id:%d,Buy or Sell:%B, Market order or Limit order:%B ,Shares:%d, Price per share:%d, Entry time:%d",
+                orderId, buySell, marketLimit, shares, price,entryTime);
         return order;
     }
 
