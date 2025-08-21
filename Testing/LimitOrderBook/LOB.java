@@ -12,8 +12,8 @@ public class LOB {
     private LimitsRBTree buyTree = new LimitsRBTree(true);
     private LimitsRBTree sellTree = new LimitsRBTree(false);
     // red black tree is used to get best buy or sell price
-    private long totalBuyOrder = 0;
-    private long totalSellOrder = 0;
+    private long totalBuyShares = 0;
+    private long totalSellShares = 0;
     // keeps tab of all the orders in a string
     double currentPrice;
 
@@ -49,6 +49,12 @@ public class LOB {
             long price = order.getPrice();
             Limit limit = limitMap.get(price);
             order.eventTime = System.currentTimeMillis();
+            order.status = true;
+            if (order.buySell) {
+                totalBuyShares -= order.shares;
+            } else {
+                totalSellShares -= order.shares;
+            }
             orderMap.remove(orderId); // remove order from order map
             if (limit != null) {
                 limit.delete(orderId); // delete order from list
@@ -76,7 +82,7 @@ public class LOB {
 
         if (order.buySell) {
             // it is a buy order
-            if (sellTree.isEmpty() || totalBuyOrder < order.shares) {
+            if (sellTree.isEmpty() || totalBuyShares < order.shares) {
                 // there is no one sell order tree is empty or does not have enough sell orders
                 placeOrder(order);
                 // if the book is empty or does not have enough volume then order will be
@@ -86,7 +92,7 @@ public class LOB {
             }
         } else {
             // it is a sell order
-            if (sellTree.isEmpty() || totalSellOrder < order.shares) {
+            if (sellTree.isEmpty() || totalSellShares < order.shares) {
                 placeOrder(order);
             }
             executeSellOrder(order);
@@ -97,11 +103,11 @@ public class LOB {
         // place order
         if (order.buySell) {
             // if buy order
-            totalBuyOrder++;
+            totalBuyShares += order.shares;
             return buyOrder(order, order.getPrice(), order.orderId);
         } else {
             // sell order
-            totalSellOrder++;
+            totalSellShares += order.shares;
             return sellOrder(order, order.getPrice(), order.orderId);
         }
         // System.out.println("Order Placed");
@@ -144,8 +150,56 @@ public class LOB {
         return order;
     }
 
-    private void executeBuyOrder(Order order) {
-
+    private void executeBuyOrder(Order incomingOrder) {
+        // incoming order looking to buy shares
+        Limit limit = buyTree.bestPrice();
+        long buyPrice = limit.getPrice();
+        incomingOrder.finalPrice = buyPrice;
+        incomingOrder.status = true;
+        int shares = incomingOrder.shares;
+        while (shares > 0) {
+            Order order = limit.getHead(); // get oldest order first
+            if (limit.isEmpty()) {
+                limit = buyTree.bestPrice();
+            }
+            if (order.shares == incomingOrder.shares) {
+                limit.pop();
+                orderMap.remove(order.orderId);
+                totalSellShares -= order.shares;
+                order.status = true;
+                if (limit.isEmpty()) {
+                    // remove limit from tree if its empty
+                    if (limit.getLimit()) {
+                        // it is a buy limit
+                        buyTree.delete(limit);
+                    } else {
+                        // it is a sell limit
+                        sellTree.delete(limit);
+                    }
+                }
+                return;
+            }
+            if (order.shares > incomingOrder.shares) {
+                order.shares -= incomingOrder.shares;
+                totalSellShares -= incomingOrder.shares;
+                return;
+            } else {
+                // shares of incoming order are greater than shares of order
+                shares -= order.shares;
+                limit.pop();
+                totalSellShares -= order.shares;
+                if (limit.isEmpty()) {
+                    // remove limit from tree if its empty
+                    if (limit.getLimit()) {
+                        // it is a buy limit
+                        buyTree.delete(limit);
+                    } else {
+                        // it is a sell limit
+                        sellTree.delete(limit);
+                    }
+                }
+            }
+        }
     }
 
     private void executeSellOrder(Order order) {
@@ -170,14 +224,15 @@ public class LOB {
 
     public long getBuyOrder() {
         // return total buy orders in the book
-        return totalBuyOrder;
+        return totalBuyShares;
     }
 
     public long getSellOrder() {
         // return total buy orders in the book
-        return totalSellOrder;
+        return totalSellShares;
     }
 }
 
-// we don't delete list from hashmaps after it is empty so that we don't have to create new list instance when order of same price is placed
+// we don't delete list from hashmaps after it is empty so that we don't have to
+// create new list instance when order of same price is placed
 // thus preventing GC from running speeding up our program

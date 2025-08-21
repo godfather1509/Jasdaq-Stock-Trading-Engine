@@ -5,10 +5,12 @@ public class Order {
     final int orderId; // unique for each order
     boolean buySell; // buy=true, sell=false
     boolean marketLimit; // market= true, limit= false
+    boolean status; // executed/canceled= true, pending=false
     int shares; // no of shares
     long price; // price per share
     long entryTime; // time when order was placed
     long eventTime; // time when order was executed
+    long finalPrice;
 
     Order nextOrder; // next order in the list
     Order prevOrder; // previous order in the list
@@ -18,6 +20,7 @@ public class Order {
         this.orderId = orderId;
         this.buySell = buySell;
         this.marketLimit=marketLimit;
+        this.status=false; // by default all orders are set as pending
         this.shares = shares;
         this.price = price;
         this.entryTime = entryTime;

@@ -59,17 +59,7 @@ public class Limit {
         Order temp = head;
         if (head.orderId == orderId) {
             // deleting head from list
-            head = temp.nextOrder;
-            if (head != null) {
-                head.prevOrder = null;
-            }
-            size--;
-            if (size == 0) {
-                tail = null;
-            }
-            temp.prevOrder = null;
-            temp.nextOrder = null;
-            return temp;
+            return pop();
         }
 
         while (temp != null && temp.orderId != orderId) {
@@ -96,6 +86,27 @@ public class Limit {
         temp.prevOrder = null;
         temp.nextOrder = null;
         size--;
+        return temp;
+    }
+
+    public Order pop() {
+        // remove 1st order from list
+        if (head == null) {
+            System.out.println("No Order");
+            return null;
+        }
+        Order temp = head;
+        // deleting head from list
+        head = temp.nextOrder;
+        if (head != null) {
+            head.prevOrder = null;
+        }
+        size--;
+        if (size == 0) {
+            tail = null;
+        }
+        temp.prevOrder = null;
+        temp.nextOrder = null;
         return temp;
     }
 
