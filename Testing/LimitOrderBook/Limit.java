@@ -18,6 +18,7 @@ public class Limit {
     Limit parent; // parent of the current node
     String color; // holds color of node
     int height; // height of tree from root to this node
+    int limitVolume=0; // keeps track of no. of shares in limit
 
     public Limit(long price, boolean buySell) {
         // initialize class variables
@@ -45,6 +46,7 @@ public class Limit {
         order.prevOrder = tail;
         tail = order;
         size++;
+        limitVolume+=order.shares;
     }
 
     public Order delete(int orderId) {
@@ -78,6 +80,7 @@ public class Limit {
             tail.nextOrder = null;
             temp.prevOrder = null;
             size--;
+            limitVolume-=temp.shares;
             return temp;
         }
 
@@ -86,6 +89,7 @@ public class Limit {
         temp.prevOrder = null;
         temp.nextOrder = null;
         size--;
+        limitVolume-=temp.shares;
         return temp;
     }
 
@@ -107,6 +111,7 @@ public class Limit {
         }
         temp.prevOrder = null;
         temp.nextOrder = null;
+        limitVolume-=temp.shares;
         return temp;
     }
 

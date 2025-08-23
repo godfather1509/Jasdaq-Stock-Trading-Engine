@@ -5,25 +5,30 @@ public class Main {
 
         LOB lob = new LOB();
         for (int i = 100; i < 110; i++) {
-            if(i%2==0)
-            lob.addOrder(i, true, true ,i * 200 + 10, (i + 1) * 100);
-            else
-            lob.addOrder(i, true, false ,i * 200 + 10, (i + 1) * 100);
-            // buy stock
+            lob.addOrder(i, true, false, 1000 + i, i * 100);
+            // buy limit order
         }
-
         for (int i = 110; i < 120; i++) {
-            if(i%2!=0)
-            lob.addOrder(i, false, true ,i * 200 + 10, (i + 1) * 100);
-            else
-            lob.addOrder(i, false, false ,i * 200 + 10, (i + 1) * 100);
-            // sell stock
+            lob.addOrder(i, false, false, 1000 + i, i * 100);
+            // sell limit order
         }
         lob.displayBook();
-        System.out.println("\nCanceled order:");
-        for (int i = 105; i < 115; i++) {
-            System.out.println(lob.cancelOrder(i));
-            // buy stock
+        // System.out.println("\nCanceled order:");
+        // for (int i = 105; i < 115; i++) {
+        //     System.out.println(lob.cancelOrder(i));
+        //     // cancel order
+        // }
+
+        System.out.println("\nMarket Orders:");
+
+        for (int i = 125; i < 130; i++) {
+            // sell market order
+            lob.addOrder(i, false, true, 1000 + i, i * 10);
+        }
+
+        for (int i = 120; i < 125; i++) {
+            // buy market order
+            lob.addOrder(i, true, true, 1000 + i, i * 10);
         }
         lob.displayBook();
 

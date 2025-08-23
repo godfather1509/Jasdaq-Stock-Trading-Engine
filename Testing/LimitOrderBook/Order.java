@@ -16,19 +16,20 @@ public class Order {
     Order prevOrder; // previous order in the list
     private Limit parentLimit;
 
-    public Order(int orderId, boolean buySell, long price ,int shares, long entryTime, boolean marketLimit) {
+    public Order(int orderId, boolean buySell, long price, int shares, long entryTime, boolean marketLimit) {
         this.orderId = orderId;
         this.buySell = buySell;
-        this.marketLimit=marketLimit;
-        this.status=false; // by default all orders are set as pending
+        this.marketLimit = marketLimit;
+        this.status = false; // by default all orders are set as pending
         this.shares = shares;
         this.price = price;
         this.entryTime = entryTime;
         this.nextOrder = null;
         this.prevOrder = null;
+        this.finalPrice = 0;
     }
 
-    public long getPrice(){
+    public long getPrice() {
         // returns price per share
         return price;
     }
@@ -42,8 +43,9 @@ public class Order {
     }
 
     public String toString() {
-        String order = String.format("Order id:%d,Buy or Sell:%B, Market order or Limit order:%B ,Shares:%d, Price per share:%d, Entry time:%d",
-                orderId, buySell, marketLimit, shares, price,entryTime);
+        String order = String.format(
+                "Order id:%d,Buy or Sell:%B, Market order or Limit order:%B ,Shares:%d, Price per share:%d, Final price:%d, status:%B, Entry time:%d, Event time:%d",
+                orderId, buySell, marketLimit, shares, price, finalPrice, status, entryTime, eventTime);
         return order;
     }
 
