@@ -51,7 +51,7 @@ public class LimitsRBTree {
         return x;
       }
     } else {
-      System.out.println("Tree is Empty");
+      // System.out.println("Tree is Empty");
       return null;
     }
   }
@@ -69,7 +69,7 @@ public class LimitsRBTree {
 
   public void display() {
     if (root == null) {
-      System.out.println("Tree is empty");
+      // System.out.println("Tree is empty");
       return;
     }
     display(root, "Root node");

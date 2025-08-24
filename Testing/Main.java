@@ -1,4 +1,3 @@
-import java.util.*;
 import LimitOrderBook.LOB;
 
 public class Main {
@@ -6,6 +5,7 @@ public class Main {
 
         LOB lob = new LOB();
 
+        System.out.println("\nLimit Orders:");
         for (int i = 100; i < 110; i++) {
             // sell limit order
             lob.addOrder(i, false, false, 1000 + i, i * 100);
@@ -16,24 +16,23 @@ public class Main {
             // buy limit order
         }
         lob.displayBook();
-        // System.out.println("\nCanceled order:");
-        // for (int i = 105; i < 115; i++) {
-        //     System.out.println(lob.cancelOrder(i));
-        //     // cancel order
-        // }
 
-        // System.out.println("\nMarket Orders:");
+        System.out.println("\nCanceled order:");
+        for (int i = 105; i < 115; i++) {
+            System.out.println(lob.cancelOrder(i));
+            // cancel order
+        }
 
-        // for (int i = 125; i < 130; i++) {
-        //     // sell market order
-        //     lob.addOrder(i, false, true, 1000 + i, i * 10);
-        // }
-
-        // for (int i = 120; i < 125; i++) {
-        //     // buy market order
-        //     lob.addOrder(i, true, true, 1000 + i, i * 10);
-        // }
-        // lob.displayBook();
+        System.out.println("\nMarket Orders:");
+        for (int i = 125; i < 130; i++) {
+            // sell market order
+            lob.addOrder(i, false, true, 1000 + i, i * 10);
+        }
+        for (int i = 120; i < 125; i++) {
+            // buy market order
+            lob.addOrder(i, true, true, 1000 + i, i * 10);
+        }
+        lob.displayBook();
 
     }
 

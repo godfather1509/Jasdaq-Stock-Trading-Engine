@@ -162,6 +162,10 @@ public class Limit {
         return size;
     }
 
+    public int getVolume(){
+        return limitVolume;
+    }
+
     public long getPrice() {
         // returns price associated with this linked list
         return price;
@@ -177,21 +181,7 @@ public class Limit {
         return tail;
     }
 
-    public boolean isLeftChild() {
-        // check if current limit node is left child of it parent
-        return this == parent.left;
-    }
-
-    public void flipColor() {
-        // this will flip the color of the node
-        setColor(color == "R" ? "B" : "R");
-    }
-
-    public void setColor(String color) {
-        // set color
-        this.color = color;
-    }
-
+    
     public boolean isEmpty() {
         // will tell if list is empty or not
         return head == null;
