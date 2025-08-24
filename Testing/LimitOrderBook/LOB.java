@@ -52,9 +52,11 @@ public class LOB {
                 System.out.println(order1.toString());
                 // market order is order that executes immediately at best available price
             } else {
-                // if it is a limit order
-                // limit order is order that holds till asked price is available
-                // market order do not go in order map as they are exceuted instantaneoulsy
+                /*
+                 * if it is a limit order
+                 * limit order is order that holds till asked price is available
+                 * market order do not go in order map as they are exceuted instantaneoulsy
+                 */
                 boolean executed = false;
                 if (buySell) {
                     // buy order
@@ -85,6 +87,11 @@ public class LOB {
         Limit limit;
         if (orderMap.containsKey(orderId)) {
             Order order = orderMap.get(orderId);
+            if (order.status) {
+                // if order is laready executed it cannot be canceled
+                System.out.println("Order is already executed");
+                return null;
+            }
             long price = order.getPrice();
             if (order.buySell) {
                 limit = buyLimitMap.get(price);
@@ -121,8 +128,27 @@ public class LOB {
         }
     }
 
-    private boolean executeLimitOrder(Order incomingOrder, LimitsRBTree tree, int totalShares) {
+    private Order placeOrder(Order order) {
+        // place order recognizes order type(buy or sell) and insert it into respective
+        // Limits
 
+        order.marketLimit = false; // limit order
+        orderMap.put(order.orderId, order); // insert order in order map
+        order.finalPrice = order.getPrice(); // limit orders sell only at asked prices
+        if (order.buySell) {
+            // buy order
+            totalBuyShares += order.shares;
+            Order buy = buyOrder(order, order.getPrice(), order.orderId);
+            return buy;
+        } else {
+            // sell order
+            totalSellShares += order.shares;
+            Order sell = sellOrder(order, order.getPrice(), order.orderId);
+            return sell;
+        }
+    }
+
+    private boolean executeLimitOrder(Order incomingOrder, LimitsRBTree tree, int totalShares) {
         Limit limit = tree.bestPrice(); // get priced limit from passed tree
         boolean isBuy = incomingOrder.buySell;
         if (limit != null) {
@@ -134,7 +160,7 @@ public class LOB {
                 return result.shares == 0;
             } else {
                 // when prices does not match
-                System.out.println("Order did not match");
+                System.out.println(incomingOrder.orderId + " Order did not match");
                 return false;
             }
         } else {
@@ -150,9 +176,7 @@ public class LOB {
             System.out.println(order.toString() + " is either null or already executed");
             return null;
         }
-
         if (order.buySell) {
-
             if (sellTree.isEmpty()) {
                 return null;
             } else {
@@ -168,27 +192,6 @@ public class LOB {
             }
         }
         // if a market order is cannot be executed fully then it is discarded
-    }
-
-    private Order placeOrder(Order order) {
-        // place order recognizes order type(buy or sell) and insert it into respective
-        // Limits
-        order.marketLimit = false;
-        orderMap.put(order.orderId, order); // insert order in order map
-        order.finalPrice = order.getPrice();
-        // limit orders sell only at asked prices
-        if (order.buySell) {
-            // buy order
-            totalBuyShares += order.shares;
-            Order buy = buyOrder(order, order.getPrice(), order.orderId);
-            return buy;
-        } else {
-            // sell order
-            totalSellShares += order.shares;
-            Order sell = sellOrder(order, order.getPrice(), order.orderId);
-            return sell;
-        }
-        // System.out.println("Order Placed");
     }
 
     private Order buyOrder(Order order, long unitPrice, int orderId) {
@@ -229,81 +232,83 @@ public class LOB {
     }
 
     private Order executeOrder(Order incomingOrder, LimitsRBTree tree, int totalShares) {
-
         Limit limit = tree.bestPrice(); // returns limit with least price
         int remainingShares = incomingOrder.shares;
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
         boolean isBuy = incomingOrder.buySell;
+        while (remainingShares > 0) {
 
-        if (limit != null) {
-            while (remainingShares > 0) {
-                Order order = limit.getHead();
-                // get oldest order first
-                if (order == null) {
-                    incomingOrder.shares = remainingShares;
-                    incomingOrder.status = (remainingShares == 0);
-                    return incomingOrder;
-                    // execute order till shares are available if book becomes empty then partially
-                    // execute order
-                    // and return with remaining shares
-                }
-                if (order.shares == remainingShares) {
+            if (limit == null) {
+                incomingOrder.shares = remainingShares;
+                incomingOrder.status = (remainingShares == 0);
+                return incomingOrder;
+                // execute order till shares are available if book becomes empty then partially
+                // execute order
+                // and return with remaining shares
+            }
 
-                    remainingShares = 0;
-                    incomingOrder.shares = remainingShares;
-                    incomingOrder.finalPrice = order.getPrice(); // update final price
-                    incomingOrder.status = true; // trade is executed
-                    incomingOrder.eventTime = System.currentTimeMillis();
+            Order order = limit.getHead();
+            // get oldest order first
+            if (order == null) {
+                incomingOrder.shares = remainingShares;
+                incomingOrder.status = (remainingShares == 0);
+                return incomingOrder;
+                // execute order till shares are available if book becomes empty then partially
+                // execute order
+                // and return with remaining shares
+            }
+            if (order.shares == remainingShares) {
 
-                    currentPrice = order.getPrice(); // update current price of share
+                remainingShares = 0;
+                incomingOrder.shares = remainingShares;
+                incomingOrder.finalPrice = order.getPrice(); // update final price
+                incomingOrder.status = true; // trade is executed
+                incomingOrder.eventTime = System.currentTimeMillis();
 
-                    limit.pop(); // remove the 1st order from list
-                    limit.limitVolume-=order.shares;
-                    orderMap.remove(order.orderId); // remove the order from map
-                    order.status = true; // order is fulfilled/ executed
-                    order.eventTime = System.currentTimeMillis();
+                currentPrice = order.getPrice(); // update current price of share
 
-                    totalShares -= order.shares; // update total available shares to sell
+                limit.pop(); // remove the 1st order from list
+                limit.limitVolume -= order.shares;
+                orderMap.remove(order.orderId); // remove the order from map
+                order.status = true; // order is fulfilled/ executed
+                order.eventTime = System.currentTimeMillis();
 
-                    if (limit.isEmpty()) {
-                        // remove limit from tree if its empty
-                        tree.delete(limit);
-                        if (marketLimit) {
-                            // if it is a market order update limit with new best order
-                            limit = tree.bestPrice();
-                            if (limit == null)
-                                break;
-                        }
+                totalShares -= order.shares; // update total available shares to sell
+
+                if (limit.isEmpty()) {
+                    // remove limit from tree if its empty
+                    tree.delete(limit);
+                    if (marketLimit) {
+                        // if it is a market order update limit with new best order
+                        limit = tree.bestPrice();
                     }
                 }
-                if (order.shares < remainingShares) {
-                    // shares of incoming order are more than shares of order in the book
-                    remainingShares -= order.shares;
-                    order.eventTime = System.currentTimeMillis();
-                    limit.pop();
-                    limit.limitVolume-=order.shares;
-                    totalShares -= order.shares;
-                    if (limit.isEmpty()) {
-                        // remove limit from tree if its empty
-                        tree.delete(limit);
-                        if (marketLimit) {
-                            limit = tree.bestPrice();
-                            if (limit == null)
-                                break;
-                        }
+            }
+            if (order.shares < remainingShares) {
+                // shares of incoming order are more than shares of order in the book
+                remainingShares -= order.shares;
+                order.eventTime = System.currentTimeMillis();
+                limit.pop();
+                limit.limitVolume -= order.shares;
+                totalShares -= order.shares;
+                if (limit.isEmpty()) {
+                    // remove limit from tree if its empty
+                    tree.delete(limit);
+                    if (marketLimit) {
+                        limit = tree.bestPrice();
                     }
-                } else {
-                    // shares of order in book are more
-                    order.shares -= remainingShares;
-                    totalShares -= remainingShares;
-                    limit.limitVolume-=remainingShares;
-                    remainingShares = 0;
-                    incomingOrder.finalPrice = order.getPrice(); // update final price
-                    incomingOrder.status = true; // trade is executed
-                    incomingOrder.shares = remainingShares;
-                    incomingOrder.eventTime = System.currentTimeMillis();
-                    currentPrice = order.getPrice(); // update current price of share
                 }
+            } else {
+                // shares of order in book are more
+                order.shares -= remainingShares;
+                totalShares -= remainingShares;
+                limit.limitVolume -= remainingShares;
+                remainingShares = 0;
+                incomingOrder.finalPrice = order.getPrice(); // update final price
+                incomingOrder.status = true; // trade is executed
+                incomingOrder.shares = remainingShares;
+                incomingOrder.eventTime = System.currentTimeMillis();
+                currentPrice = order.getPrice(); // update current price of share
             }
         }
         if (isBuy) {
@@ -318,24 +323,26 @@ public class LOB {
     }
 
     public void displayBook() {
-        Limit bestBuy = buyTree.bestPrice();
-        Limit bestSell = sellTree.bestPrice();
-
-        System.out.println("\nBest buy price: " + (bestBuy != null ? bestBuy.getPrice() : "—"));
-        System.out.println("Best sell price: " + (bestSell != null ? bestSell.getPrice() : "—"));
+        // Display book data
+        Limit buy = buyTree.bestPrice();
+        Limit sell = sellTree.bestPrice();
+        System.out.println("\nBest buy price:" + buy==null?buy.getPrice():"-");
+        System.out.println("Best sell price:" + sell==null?sell.getPrice():"-");
 
         System.out.println("\nBuy Limits:");
-        for (Limit i : buyLimitMap.values())
+        for (Limit i : buyLimitMap.values()) {
             i.display();
+        }
 
         System.out.println("\nSell Limits:");
-        for (Limit i : sellLimitMap.values())
+        for (Limit i : sellLimitMap.values()) {
             i.display();
+        }
 
-        System.out.println("Total Shares to buy: " + getBuyShares());
-        System.out.println("Total Shares to sell: " + getSellShares());
-        System.out.println("Total Shares in book: " + getTotalShares());
-        System.out.println("Current price of stock: " + currentPrice);
+        System.out.println("Total Shares to buy:" + getBuyShares());
+        System.out.println("Total Shares to sell:" + getSellShares());
+        System.out.println("Total Shares in book:" + getTotalShares());
+        System.out.println("Current price of stock:" + currentPrice);
     }
 
 }
