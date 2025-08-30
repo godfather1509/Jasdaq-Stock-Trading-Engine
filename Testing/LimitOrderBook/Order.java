@@ -1,6 +1,7 @@
 package LimitOrderBook;
 
-public class Order {
+class Order {
+    // this is package-private class it can be accssed only within the package
 
     final int orderId; // unique for each order
     boolean buySell; // buy=true, sell=false

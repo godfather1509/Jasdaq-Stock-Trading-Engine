@@ -2,7 +2,7 @@ package LimitOrderBook;
 
 import java.util.*;
 
-public class Limit {
+class Limit {
     // Limit is a linked list
     // we could have used min heap but then canceling and removing some order from
     // inbetween would have been a time cosuming

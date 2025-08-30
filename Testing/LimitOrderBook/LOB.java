@@ -1,33 +1,35 @@
 package LimitOrderBook;
 
-import java.util.*;
+import java.util.HashMap;
 
-public class LOB {
+class LOB {
     // Different LOB instances are made for stocks of different companies
     // In market an order only becomes trade when it is executed(bought/sold)
 
     private HashMap<Integer, Order> orderMap = new HashMap<>();
     private HashMap<Long, Limit> buyLimitMap = new HashMap<>();
     private HashMap<Long, Limit> sellLimitMap = new HashMap<>();
+    // ConcurrentHashMap are used to make hashmaps thread safe, 
+    // if multiple functions insert and delete data simultaneously from maps then normal hashmaps will get corrupted
 
     private Order order;
     private LimitsRBTree buyTree = new LimitsRBTree(true);
     private LimitsRBTree sellTree = new LimitsRBTree(false);
     // red black tree is used to get best buy or sell price
-    private int totalBuyShares = 0;
-    private int totalSellShares = 0;
+    private long totalBuyShares = 0;
+    private long totalSellShares = 0;
     // keeps tab of all the orders in a string
     private long currentPrice; // price at which last trade happened
 
     private Limit buyLimit;
     private Limit sellLimit;
 
-    public int getBuyShares() {
+    public long getBuyShares() {
         // return total buy orders in the book
         return totalBuyShares;
     }
 
-    public int getSellShares() {
+    public long getSellShares() {
         // return total buy orders in the book
         return totalSellShares;
     }
@@ -50,10 +52,11 @@ public class LOB {
                 // if it is a market order
                 Order order1 = executeMarketOrder(order);
                 if (order1 == null) {
-                    System.out.println("Cannot Execute order");
+                    // System.out.println("Cannot Execute order");
+                    return;
                 } else {
-                    System.out.println("Order Executed");
-                    System.out.println(order1.toString());
+                    // System.out.println("Order Executed");
+                    // System.out.println(order1.toString());
                 }
                 // market order is order that executes immediately at best available price
             } else {
@@ -66,7 +69,7 @@ public class LOB {
                 OrderWrapper wrap;
                 if (buySell) {
                     // buy order
-                    wrap = executeLimitOrder(order, sellTree, totalSellShares);
+                    wrap = executeLimitOrder(order, sellTree, totalSellShares); // try executing incoming order first
                     order=wrap.getOrder();
                     totalSellShares=wrap.getShares();
                     executed = wrap.getExecuted();
@@ -85,11 +88,12 @@ public class LOB {
                  * else place it in book
                  */
                 if (executed) {
-                    System.out.println("Order Executed");
+                    // System.out.println("Order Executed");
                     return;
                 } else {
+                    // if order does not execute
                     placeOrder(order); // this will add order in book
-                    System.out.println("Order Placed");
+                    // System.out.println("Order Placed");
                 }
             }
         } else {
@@ -164,7 +168,7 @@ public class LOB {
         }
     }
 
-    private OrderWrapper executeLimitOrder(Order incomingOrder, LimitsRBTree tree, int totalShares) {
+    private OrderWrapper executeLimitOrder(Order incomingOrder, LimitsRBTree tree, long totalShares) {
         Limit limit = tree.bestPrice(); // get priced limit from passed tree
         boolean isBuy = incomingOrder.buySell;
         if (limit != null) {
@@ -195,12 +199,13 @@ public class LOB {
         // market orders are executed as soon as they are placed
         if (order == null || order.status) {
             System.out.println(order.toString() + " is either null or already executed");
-            return placeOrder(order);
+            return null;
         }
         OrderWrapper wrap;
         if (order.buySell) {
             if (sellTree.isEmpty()) {
-                return placeOrder(order);
+                System.out.println("Rejecting buy market order: no liquidity");
+                return null;
             } else {
                 // Buy market: match against sell side until empty or filled
                 wrap = executeOrder(order, sellTree, totalSellShares);
@@ -210,7 +215,8 @@ public class LOB {
         } else {
             // Sell market: match against buy side
             if (buyTree.isEmpty()) {
-                return placeOrder(order);
+                System.out.println("Rejecting sell market order: no liquidity");
+                return null;
             } else {
                 wrap = executeOrder(order, buyTree, totalBuyShares);
                 totalBuyShares = wrap.getShares();
@@ -232,11 +238,10 @@ public class LOB {
             // limitmap contains list instance for given price
             buyLimit = buyLimitMap.get(unitPrice);
             if (buyLimit.isEmpty()) {
-                // limit is empty insert but object is present in hashmap will have to insert it
-                // in buytree
+                // insert new price level in tree
                 buyTree.insert(buyLimit);
             }
-            buyLimit.insert(order);
+            buyLimit.insert(order); // insert order in tree
         }
         return order;
     }
@@ -251,6 +256,7 @@ public class LOB {
         } else {
             sellLimit = sellLimitMap.get(unitPrice);
             if (sellLimit.isEmpty()) {
+                // insert price level in tree
                 sellTree.insert(sellLimit);
             }
             sellLimit.insert(order);
@@ -258,22 +264,25 @@ public class LOB {
         return order;
     }
 
-    private OrderWrapper executeOrder(Order incomingOrder, LimitsRBTree tree, int totalShares) {
+    private OrderWrapper executeOrder(Order incomingOrder, LimitsRBTree tree, long totalShares) {
         Limit limit = tree.bestPrice(); // returns limit with least price
         int remainingShares = incomingOrder.shares;
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
-        while (remainingShares > 0) {
+        boolean isBuy=incomingOrder.buySell;
 
-            if (limit == null) {
-                incomingOrder.shares = remainingShares;
-                incomingOrder.status = (remainingShares == 0);
-                incomingOrder.finalPrice = currentPrice;
-                return new OrderWrapper(incomingOrder, totalShares);
-                // execute order till shares are available if book becomes empty then partially
-                // execute order
-                // and return with remaining shares
+        while (remainingShares > 0 && limit!=null) {
+
+            if(!marketLimit){
+                // if limit order
+                if(isBuy && incomingOrder.getPrice()<limit.getPrice()){
+                    // its limit buy order purchase should not be greater than given amount
+                    break;
+                }
+                else if(!isBuy && incomingOrder.getPrice()>limit.getPrice()){
+                    // its limit sell order sale should not be less than given amount
+                    break;
+                }
             }
-
             Order order = limit.getHead();
             // get oldest order first
             if (order == null) {
@@ -306,10 +315,6 @@ public class LOB {
                 if (limit.isEmpty()) {
                     // remove limit from tree if its empty
                     tree.delete(limit);
-                    if (marketLimit) {
-                        // if it is a market order update limit with new best order
-                        limit = tree.bestPrice();
-                    }
                 }
             }
             if (order.shares < remainingShares) {
@@ -323,9 +328,6 @@ public class LOB {
                 if (limit.isEmpty()) {
                     // remove limit from tree if its empty
                     tree.delete(limit);
-                    if (marketLimit) {
-                        limit = tree.bestPrice();
-                    }
                 }
             } else {
                 // shares of order in book are more
@@ -339,6 +341,7 @@ public class LOB {
                 incomingOrder.eventTime = System.currentTimeMillis();
                 currentPrice = order.getPrice(); // update current price of share
             }
+            limit = tree.bestPrice();
         }
         return new OrderWrapper(incomingOrder, totalShares);
     }
@@ -347,20 +350,20 @@ public class LOB {
         // Display book data
         Limit buy = buyTree.bestPrice();
         Limit sell = sellTree.bestPrice();
+        
+        // System.out.println("\nBuy Limits:");
+        // for (Limit i : buyLimitMap.values()) {
+        //     i.display();
+        // }
+
+        // System.out.println("\nSell Limits:");
+        // for (Limit i : sellLimitMap.values()) {
+        //     i.display();
+        // }
+
         System.out.println("\nBest buy price:" + (buy == null ? "-" : buy.getPrice()));
         System.out.println("Best sell price:" + (sell == null ? "-" : sell.getPrice()));
         System.out.println("Current price of stock:" + currentPrice);
-
-        System.out.println("\nBuy Limits:");
-        for (Limit i : buyLimitMap.values()) {
-            i.display();
-        }
-
-        System.out.println("\nSell Limits:");
-        for (Limit i : sellLimitMap.values()) {
-            i.display();
-        }
-
         System.out.println("Total Shares to buy:" + getBuyShares());
         System.out.println("Total Shares to sell:" + getSellShares());
         System.out.println("Total Shares in book:" + getTotalShares());
@@ -369,15 +372,15 @@ public class LOB {
     private class OrderWrapper {
 
         Order order;
-        int totalShares;
+        long totalShares;
         boolean executed;
 
-        public OrderWrapper(Order order, int totalShares) {
+        public OrderWrapper(Order order, long totalShares) {
             this.totalShares = totalShares;
             this.order = order;
         }
 
-        public OrderWrapper(Order order, boolean executed, int totalShares) {
+        public OrderWrapper(Order order, boolean executed, long totalShares) {
             this.order = order;
             this.executed = executed;
             this.totalShares = totalShares;
@@ -387,7 +390,7 @@ public class LOB {
             return order;
         }
 
-        public int getShares() {
+        public long getShares() {
             return totalShares;
         }
 

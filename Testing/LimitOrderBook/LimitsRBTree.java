@@ -23,7 +23,7 @@ Rules of Red Black Tree
 
 */
 
-public class LimitsRBTree {
+class LimitsRBTree {
 
   /** Root of the RB tree */
   private Limit root;
