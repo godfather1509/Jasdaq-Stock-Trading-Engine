@@ -23,9 +23,8 @@ public class Main {
         }
         mt.submitDisplayrequest();
 
-        // System.out.println("\nCanceled order:");
-            // mt.submitCancelrequest(-1);
-            // System.out.println(mt.submitCancelrequest(i));
+        mt.submitAddRequest(-1, true, 100, 10, false);
+        mt.submitCancelrequest(-1);
             // cancel order
 
         // System.out.println("Market Orders:");
@@ -46,16 +45,16 @@ public class Main {
 
 
     public static void main(String[] args) {
-        // double total=0;
-        // for(int i=0;i<10;i++){
-        //     runbenchMarking();
-        // }
-        // for(int i=0;i<5;i++){
-        //     total+=runbenchMarking();
-        // }
-        // System.out.println("Average run time:"+total/10+"ms");
-        // System.out.println("Total Execution Time:"+runbenchMarking()+"ms");
-        runbenchMarking();
+        double total=0;
+        for(int i=0;i<10;i++){
+            runbenchMarking();
+        }
+        for(int i=0;i<5;i++){
+            total+=runbenchMarking();
+        }
+        System.out.println("Average run time:"+total/10+"ms");
+        System.out.println("Total Execution Time:"+runbenchMarking()+"ms");
+        // runbenchMarking();
     }
 
 }

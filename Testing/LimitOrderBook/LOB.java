@@ -44,7 +44,7 @@ class LOB {
         return currentPrice;
     }
 
-    public void addOrder(int orderId, boolean buySell, boolean marketLimit, long price, int shares) {
+    public Order addOrder(int orderId, boolean buySell, boolean marketLimit, long price, int shares) {
         if (!orderMap.containsKey(orderId)) {
             long entryTime = System.currentTimeMillis(); // get time when order is placed
             order = new Order(orderId, buySell, price, shares, entryTime, marketLimit);
@@ -53,10 +53,11 @@ class LOB {
                 Order order1 = executeMarketOrder(order);
                 if (order1 == null) {
                     // System.out.println("Cannot Execute order");
-                    return;
+                    return null;
                 } else {
                     // System.out.println("Order Executed");
                     // System.out.println(order1.toString());
+                    return order1;
                 }
                 // market order is order that executes immediately at best available price
             } else {
@@ -89,16 +90,16 @@ class LOB {
                  */
                 if (executed) {
                     // System.out.println("Order Executed");
-                    return;
+                    return order;
                 } else {
                     // if order does not execute
-                    placeOrder(order); // this will add order in book
+                    return placeOrder(order); // this will add order in book
                     // System.out.println("Order Placed");
                 }
             }
         } else {
             System.out.println("Order with orderId " + orderId + " already exists");
-            return;
+            return null;
         }
     }
 
@@ -185,7 +186,7 @@ class LOB {
                 }
             } else {
                 // when prices does not match
-                System.out.println(incomingOrder.orderId + " Order did not match");
+                // System.out.println(incomingOrder.orderId + " Order did not match");
                 return new OrderWrapper(incomingOrder, false, totalShares);
             }
         } else {
@@ -286,32 +287,19 @@ class LOB {
             Order order = limit.getHead();
             // get oldest order first
             if (order == null) {
-                incomingOrder.shares = remainingShares;
-                incomingOrder.status = (remainingShares == 0);
-                incomingOrder.finalPrice = currentPrice;
-                return new OrderWrapper(incomingOrder, totalShares);
-                // execute order till shares are available if book becomes empty then partially
-                // execute order
-                // and return with remaining shares
+                // limit is empty
+                tree.delete(limit);
+                limit=tree.bestPrice();
+                continue;
             }
             if (order.shares == remainingShares) {
-
                 remainingShares = 0;
-                incomingOrder.shares = remainingShares;
-                incomingOrder.finalPrice = order.getPrice(); // update final price
-                incomingOrder.status = true; // trade is executed
-                incomingOrder.eventTime = System.currentTimeMillis();
-
-                currentPrice = order.getPrice(); // update current price of share
-
                 limit.pop(); // remove the 1st order from list
                 limit.limitVolume -= order.shares;
                 orderMap.remove(order.orderId); // remove the order from map
                 order.status = true; // order is fulfilled/ executed
                 order.eventTime = System.currentTimeMillis();
-
                 totalShares -= order.shares; // update total available shares to sell
-
                 if (limit.isEmpty()) {
                     // remove limit from tree if its empty
                     tree.delete(limit);
@@ -335,14 +323,14 @@ class LOB {
                 totalShares -= remainingShares;
                 limit.limitVolume -= remainingShares;
                 remainingShares = 0;
-                incomingOrder.finalPrice = order.getPrice(); // update final price
-                incomingOrder.status = true; // trade is executed
-                incomingOrder.shares = remainingShares;
-                incomingOrder.eventTime = System.currentTimeMillis();
-                currentPrice = order.getPrice(); // update current price of share
             }
             limit = tree.bestPrice();
         }
+        incomingOrder.shares = remainingShares;
+        incomingOrder.finalPrice = order.getPrice(); // update final price
+        incomingOrder.status = true; // trade is executed
+        incomingOrder.eventTime = System.currentTimeMillis();
+        currentPrice = order.getPrice(); // update current price of share
         return new OrderWrapper(incomingOrder, totalShares);
     }
 

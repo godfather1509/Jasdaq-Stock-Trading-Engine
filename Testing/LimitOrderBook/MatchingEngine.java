@@ -25,12 +25,10 @@ public class MatchingEngine {
         this.worker.start();
     }
 
-    @SuppressWarnings("unused")
     private class Request {
         int orderId; // unique for each order
         boolean buySell; // buy=true, sell=false
         boolean marketLimit; // market= true, limit= false
-        boolean status; // executed/canceled= true, pending=false
         int shares; // no of shares
         long price; // price per share
         Type reqType;
@@ -42,7 +40,6 @@ public class MatchingEngine {
             this.orderId = orderId;
             this.buySell = buySell;
             this.marketLimit = marketLimit;
-            this.status = false;
             this.shares = shares;
             this.price = price;
             this.reqType=reqType; // addOrder request, cancelOrder request and displayBook request
@@ -93,19 +90,20 @@ public class MatchingEngine {
 
     public void runnerz(){
         try {
+            Order order=null;
             while (running) {
                 Request req=SingleThreadQueue.take();
                 // take() method retrieves and removes the head of this queue, waiting if necessary until an element becomes available
                 try {
                     switch (req.reqType) {
                         case addRequest:
-                            lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price,  req.shares);
-                            req.future.complete("Order Placed");
+                            order=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price,  req.shares);
+                            req.future.complete(order);
                             break;
 
                         case cancelRequest:
-                            lob.cancelOrder(req.cancelOrderId);
-                            req.future.complete("Order Canceled");
+                            order=lob.cancelOrder(req.cancelOrderId);
+                            req.future.complete(order);
                             break;
                         case displayRequest:
                             lob.displayBook();
