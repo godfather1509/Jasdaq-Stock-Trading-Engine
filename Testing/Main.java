@@ -1,4 +1,4 @@
-import LimitOrderBook.MatchingEngine;
+import MatchingEngine.TradeEngine;
 
 public class Main {
 
@@ -6,7 +6,7 @@ public class Main {
 
         long start=System.nanoTime();
 
-        MatchingEngine mt = new MatchingEngine();
+        TradeEngine mt = new TradeEngine("APL");
 
         System.out.println("Limit Orders:");
         for (int i = 0; i < 100000; i++) {
