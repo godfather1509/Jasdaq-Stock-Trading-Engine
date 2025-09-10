@@ -1,21 +1,27 @@
-package com.tradingSystem.Jasdaq.MatchingEngine;
+package com.tradingSystem.Jasdaq.Engine.matchingEngine;
 
 import java.util.HashMap;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
-import com.tradingSystem.Jasdaq.MatchingEngine.LOB.Limit;
-import com.tradingSystem.Jasdaq.MatchingEngine.LOB.LimitsRBTree;
-import com.tradingSystem.Jasdaq.MatchingEngine.LOB.Order;
+import org.springframework.stereotype.Service;
 
-class MatchingEngine {
-    // Different LOB instances are made for stocks of different companies
+import com.tradingSystem.Jasdaq.Engine.Order;
+import com.tradingSystem.Jasdaq.Engine.Trade;
+import com.tradingSystem.Jasdaq.Engine.matchingEngine.LOB.*;
+import com.tradingSystem.Jasdaq.generator.IdGenerator;
+
+@Service // this annotation makes it part of springboot project and indicates that this class handels buisness logic
+public class MatchingEngine {
+    // Different MatchingEngine instances are made for stocks of different companies
     // In market an order only becomes trade when it is executed(bought/sold)
 
-    private HashMap<Integer, Order> orderMap = new HashMap<>();
+    private HashMap<String, Order> orderMap = new HashMap<>();
     private HashMap<Long, Limit> buyLimitMap = new HashMap<>();
     private HashMap<Long, Limit> sellLimitMap = new HashMap<>();
-    // ConcurrentHashMap are used to make hashmaps thread safe, 
-    // if multiple functions insert and delete data simultaneously from maps then normal hashmaps will get corrupted
 
+    Trade trade;
+    Queue<Trade> queue = new ArrayDeque<>();
     private Order order;
     private LimitsRBTree buyTree = new LimitsRBTree(true);
     private LimitsRBTree sellTree = new LimitsRBTree(false);
@@ -28,10 +34,9 @@ class MatchingEngine {
     private Limit buyLimit;
     private Limit sellLimit;
 
-    @SuppressWarnings("unused")
     private String symbol;
 
-    public MatchingEngine(String sym){
+    public void setSymbol(String sym){
         this.symbol=sym;
     }
 
@@ -55,7 +60,18 @@ class MatchingEngine {
         return currentPrice;
     }
 
-    public Order addOrder(int orderId, boolean buySell, boolean marketLimit, long price, int shares) {
+    public record TradeResults(Queue<Trade> queue, Order order){
+        // java records is a class with certain common functions pre-implemented 
+        /*
+        Getters
+        Setters
+        Constructors
+        equals etc.
+        all above boilerplate functions come pre implemented in records
+        */
+    }
+
+    public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares) {
         if (!orderMap.containsKey(orderId)) {
             long entryTime = System.currentTimeMillis(); // get time when order is placed
             order = new Order(orderId, buySell, price, shares, entryTime, marketLimit);
@@ -68,7 +84,7 @@ class MatchingEngine {
                 } else {
                     // System.out.println("Order Executed");
                     // System.out.println(order1.toString());
-                    return order1;
+                    return new TradeResults(queue, order1);
                 }
                 // market order is order that executes immediately at best available price
             } else {
@@ -82,15 +98,15 @@ class MatchingEngine {
                 if (buySell) {
                     // buy order
                     wrap = executeLimitOrder(order, sellTree, totalSellShares); // try executing incoming order first
-                    order=wrap.getOrder();
-                    totalSellShares=wrap.getShares();
+                    order = wrap.getOrder();
+                    totalSellShares = wrap.getShares();
                     executed = wrap.getExecuted();
                     // this will sell shares
                 } else {
                     // sell order
                     wrap = executeLimitOrder(order, buyTree, totalBuyShares);
-                    order=wrap.getOrder();
-                    totalBuyShares=wrap.getShares();
+                    order = wrap.getOrder();
+                    totalBuyShares = wrap.getShares();
                     executed = wrap.getExecuted();
                     // this will buy shares
                 }
@@ -101,10 +117,11 @@ class MatchingEngine {
                  */
                 if (executed) {
                     // System.out.println("Order Executed");
-                    return order;
+                    return new TradeResults(queue, order);
                 } else {
                     // if order does not execute
-                    return placeOrder(order); // this will add order in book
+                    order=placeOrder(order);
+                    return new TradeResults(queue, order); // this will add order in book
                     // System.out.println("Order Placed");
                 }
             }
@@ -114,7 +131,7 @@ class MatchingEngine {
         }
     }
 
-    public Order cancelOrder(int orderId) {
+    public Order cancelOrder(String orderId) {
         // cancel orders
         Limit limit;
         if (orderMap.containsKey(orderId)) {
@@ -207,11 +224,13 @@ class MatchingEngine {
         }
     }
 
-    @SuppressWarnings("null")
     private Order executeMarketOrder(Order order) {
         // market orders are executed as soon as they are placed
-        if (order == null || order.status) {
-            System.out.println(order.toString() + " is either null or already executed");
+        if (order == null) {
+            System.out.println("Null Order");
+            return null;
+        } else if (order.status) {
+            System.out.println(order.toString() + " is already executed");
             return null;
         }
         OrderWrapper wrap;
@@ -240,7 +259,7 @@ class MatchingEngine {
         // order with remaining no. of shares
     }
 
-    private Order buyOrder(Order order, long unitPrice, int orderId) {
+    private Order buyOrder(Order order, long unitPrice, String orderId) {
         if (!buyLimitMap.containsKey(unitPrice)) {
             // if limitMap does not contains price level
             buyLimit = new Limit(unitPrice, true);
@@ -259,7 +278,7 @@ class MatchingEngine {
         return order;
     }
 
-    private Order sellOrder(Order order, long unitPrice, int orderId) {
+    private Order sellOrder(Order order, long unitPrice, String orderId) {
         if (!sellLimitMap.containsKey(unitPrice)) {
             // if limit map does not contain limit with given price
             sellLimit = new Limit(unitPrice, false); // initialize new limit list
@@ -281,17 +300,15 @@ class MatchingEngine {
         Limit limit = tree.bestPrice(); // returns limit with least price
         int remainingShares = incomingOrder.shares;
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
-        boolean isBuy=incomingOrder.buySell;
+        boolean isBuy = incomingOrder.buySell;
+        while (remainingShares > 0 && limit != null) {
 
-        while (remainingShares > 0 && limit!=null) {
-
-            if(!marketLimit){
+            if (!marketLimit) {
                 // if limit order
-                if(isBuy && incomingOrder.getPrice()<limit.getPrice()){
+                if (isBuy && incomingOrder.getPrice() < limit.getPrice()) {
                     // its limit buy order purchase should not be greater than given amount
                     break;
-                }
-                else if(!isBuy && incomingOrder.getPrice()>limit.getPrice()){
+                } else if (!isBuy && incomingOrder.getPrice() > limit.getPrice()) {
                     // its limit sell order sale should not be less than given amount
                     break;
                 }
@@ -301,7 +318,7 @@ class MatchingEngine {
             if (order == null) {
                 // limit is empty
                 tree.delete(limit);
-                limit=tree.bestPrice();
+                limit = tree.bestPrice();
                 continue;
             }
             if (order.shares == remainingShares) {
@@ -309,6 +326,16 @@ class MatchingEngine {
                 remainingShares = 0;
                 limit.pop(); // remove the 1st order from list
                 limit.limitVolume -= order.shares;
+                if (isBuy) {
+                    trade = new Trade(IdGenerator.nextID(symbol,'t'), incomingOrder.orderId, order.orderId,
+                            order.getPrice(), order.shares, symbol);
+                    queue.add(trade);
+                } else {
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
+                            order.getPrice(), order.shares, symbol);
+                    queue.add(trade);
+                }
+
                 orderMap.remove(order.orderId); // remove the order from map
                 order.status = true; // order is fulfilled/ executed
                 order.eventTime = System.currentTimeMillis();
@@ -317,12 +344,22 @@ class MatchingEngine {
                     // remove limit from tree if its empty
                     tree.delete(limit);
                 }
+                break;
             }
             if (order.shares < remainingShares) {
                 // shares of incoming order are more
                 remainingShares -= order.shares;
                 order.eventTime = System.currentTimeMillis();
                 order.status = true;
+                if (isBuy) {
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
+                            order.getPrice(), order.shares, symbol);
+                    queue.add(trade);
+                } else {
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
+                            order.getPrice(), order.shares, symbol);
+                    queue.add(trade);
+                }
                 limit.pop();
                 limit.limitVolume -= order.shares;
                 totalShares -= order.shares;
@@ -332,6 +369,15 @@ class MatchingEngine {
                 }
             } else {
                 // shares of resting order are more
+                if (isBuy) {
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
+                            order.getPrice(), remainingShares, symbol);
+                    queue.add(trade);
+                } else {
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
+                            order.getPrice(), remainingShares, symbol);
+                    queue.add(trade);
+                }
                 order.shares -= remainingShares;
                 totalShares -= remainingShares;
                 limit.limitVolume -= remainingShares;
@@ -351,15 +397,15 @@ class MatchingEngine {
         // Display book data
         Limit buy = buyTree.bestPrice();
         Limit sell = sellTree.bestPrice();
-        
+
         // System.out.println("\nBuy Limits:");
         // for (Limit i : buyLimitMap.values()) {
-        //     i.display();
+        // i.display();
         // }
 
         // System.out.println("\nSell Limits:");
         // for (Limit i : sellLimitMap.values()) {
-        //     i.display();
+        // i.display();
         // }
 
         System.out.println("\nBest buy price:" + (buy == null ? "-" : buy.getPrice()));
@@ -368,36 +414,6 @@ class MatchingEngine {
         System.out.println("Total Shares to buy:" + getBuyShares());
         System.out.println("Total Shares to sell:" + getSellShares());
         System.out.println("Total Shares in book:" + getTotalShares());
-    }
-
-    @SuppressWarnings("unused")
-    private class Trade{
-
-        @SuppressWarnings("unused")
-        String symbol;
-        @SuppressWarnings("unused")
-        int tradeId;
-        @SuppressWarnings("unused")
-        int  buyOrderId;
-        @SuppressWarnings("unused")
-        int sellOrderId;
-        @SuppressWarnings("unused")
-        long price;
-        @SuppressWarnings("unused")
-        long eventTime;
-        @SuppressWarnings("unused")
-        int quantity;
-
-        @SuppressWarnings("unused")
-        public Trade(int tradeId, int buyOrderId, int sellOrderId, long price, int quantity, String sym){
-            this.symbol=sym;
-            this.tradeId=tradeId;
-            this.buyOrderId=buyOrderId;
-            this.sellOrderId=sellOrderId;
-            this.eventTime=System.currentTimeMillis();
-            this.price=price;
-            this.quantity=quantity;
-        }
     }
 
     private class OrderWrapper {

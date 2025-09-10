@@ -1,6 +1,7 @@
-package com.tradingSystem.Jasdaq.MatchingEngine.LOB;
+package com.tradingSystem.Jasdaq.Engine.matchingEngine.LOB;
 
-import java.util.*;
+import java.util.ArrayList;
+import com.tradingSystem.Jasdaq.Engine.Order;
 
 public class Limit {
     // Limit is a linked list
@@ -49,7 +50,7 @@ public class Limit {
         limitVolume+=order.shares;
     }
 
-    public Order delete(int orderId) {
+    public Order delete(String orderId) {
         // delete order from anywhere in the list
         // ideally order will be deleted only when executed but sometimes user might
         // also cancel the order
@@ -59,12 +60,12 @@ public class Limit {
         }
 
         Order temp = head;
-        if (head.orderId == orderId) {
+        if (head.orderId.equals(orderId)) {
             // deleting head from list
             return pop();
         }
 
-        while (temp != null && temp.orderId != orderId) {
+        while (temp != null && !temp.orderId.equals(orderId)) {
             // if order is not present then temp will iterate to null
             temp = temp.nextOrder;
         }
@@ -124,12 +125,12 @@ public class Limit {
         }
     }
 
-    public Order getOrder(int orderId) {
+    public Order getOrder(String orderId) {
         // will return individul order
-        if (head.orderId == orderId) {
+        if (head.orderId.equals(orderId)) {
             return getHead();
         }
-        if (tail.orderId == orderId) {
+        if (tail.orderId.equals(orderId)) {
             return getTail();
         }
         Order temp = head;

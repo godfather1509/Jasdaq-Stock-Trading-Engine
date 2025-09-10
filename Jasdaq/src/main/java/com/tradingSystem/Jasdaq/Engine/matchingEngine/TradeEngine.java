@@ -1,15 +1,11 @@
-package com.tradingSystem.Jasdaq.MatchingEngine;
+package com.tradingSystem.Jasdaq.Engine.matchingEngine;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.tradingSystem.Jasdaq.MatchingEngine.LOB.Order;
-
-/*
-Our main Limit order book is not compatible for parrallel read and write so we have implemented Single Threaded Matching engine 
-it accepts multithreded inputs and stores them in BlockingQueue(Multithreding compatible version of Queue) 
-We remove and place each of these request sequentially in order book
-*/
+import com.tradingSystem.Jasdaq.Engine.Order;
+import com.tradingSystem.Jasdaq.Engine.matchingEngine.MatchingEngine.TradeResults;
+import com.tradingSystem.Jasdaq.generator.IdGenerator;
 
 public class TradeEngine{
 
@@ -21,25 +17,28 @@ public class TradeEngine{
     String symbol;
     MatchingEngine lob;
 
+
     public TradeEngine(String sym){
         this.running=true;
-        lob=new MatchingEngine(sym);
+        this.symbol=sym;
+        lob=new MatchingEngine();
         this.worker=new Thread(this::runnerz, "Matching Engine Started"); // initialize the thread
         // this::runnerz will execute runnerz function as soon as this thread starts
         this.worker.start();
+
     }
 
     private class Request {
-        int orderId; // unique for each order
+        String orderId; // unique for each order
         boolean buySell; // buy=true, sell=false
         boolean marketLimit; // market= true, limit= false
         int shares; // no of shares
         long price; // price per share
         Type reqType;
-        int cancelOrderId;
+        String cancelOrderId;
         final CompletableFuture<Object> future;
 
-        public Request(int orderId, boolean buySell, long price, int shares, boolean marketLimit, Type reqType) {
+        public Request(String orderId, boolean buySell, long price, int shares, boolean marketLimit, Type reqType) {
             // constructor for add order
             this.orderId = orderId;
             this.buySell = buySell;
@@ -50,7 +49,7 @@ public class TradeEngine{
             this.future=new CompletableFuture<>();
         }
 
-        public Request(int orderId, Type reqType){
+        public Request(String orderId, Type reqType){
             // constructor for cancel order
             this.cancelOrderId=orderId;
             this.reqType=reqType;
@@ -64,14 +63,16 @@ public class TradeEngine{
         }
     }
 
-    public CompletableFuture<Object> submitAddRequest(int orderId, boolean buySell, long price, int shares, boolean marketLimit){
+    public CompletableFuture<Object> submitAddRequest(boolean buySell, long price, int shares, boolean marketLimit){
+
         // this function will add order
+        String orderId=IdGenerator.nextID(symbol,'o'); // get order id
         Request req=new Request(orderId, buySell, price, shares, marketLimit, Type.addRequest);
-        SingleThreadQueue.add(req);
+        SingleThreadQueue.add(req); // add request in queue
         return req.future;
     }
 
-    public CompletableFuture<Object> submitCancelrequest(int orderId){
+    public CompletableFuture<Object> submitCancelrequest(String orderId){
         // this function will cancel order
         Request req=new Request(orderId, Type.cancelRequest);
         SingleThreadQueue.add(req);
@@ -94,19 +95,19 @@ public class TradeEngine{
 
     public void runnerz(){
         try {
-            Order order=null;
+            TradeResults trades=null;
             while (running) {
                 Request req=SingleThreadQueue.take();
                 // take() method retrieves and removes the head of this queue, waiting if necessary until an element becomes available
                 try {
                     switch (req.reqType) {
                         case addRequest:
-                            order=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price,  req.shares);
-                            req.future.complete(order);
+                            trades=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price,  req.shares);
+                            req.future.complete(trades);
                             break;
 
                         case cancelRequest:
-                            order=lob.cancelOrder(req.cancelOrderId);
+                            Order order=lob.cancelOrder(req.cancelOrderId);
                             req.future.complete(order);
                             break;
                         case displayRequest:
