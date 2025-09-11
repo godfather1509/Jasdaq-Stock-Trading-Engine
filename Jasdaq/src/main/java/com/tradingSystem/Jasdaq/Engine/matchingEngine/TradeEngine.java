@@ -11,7 +11,7 @@ public class TradeEngine{
 
     BlockingQueue<Request> SingleThreadQueue = new LinkedBlockingQueue<>();
     // this is multithreded queue can prevent data corruption on multithreded read and write
-    enum Type{addRequest, cancelRequest, displayRequest, shutDown};
+    enum Type{addRequest, cancelRequest, priceRequest, shutDown};
     private volatile boolean running;
     private final Thread worker; // decalre a thread
     String symbol;
@@ -22,6 +22,7 @@ public class TradeEngine{
         this.running=true;
         this.symbol=sym;
         lob=new MatchingEngine();
+        lob.setSymbol(sym);
         this.worker=new Thread(this::runnerz, "Matching Engine Started"); // initialize the thread
         // this::runnerz will execute runnerz function as soon as this thread starts
         this.worker.start();
@@ -79,8 +80,8 @@ public class TradeEngine{
         return req.future;
     }
 
-    public CompletableFuture<Object> submitDisplayrequest(){
-        Request req=new Request(Type.displayRequest);
+    public CompletableFuture<Object> submitPricerequest(){
+        Request req=new Request(Type.priceRequest);
         SingleThreadQueue.add(req);
         return req.future;
     }
@@ -110,8 +111,8 @@ public class TradeEngine{
                             Order order=lob.cancelOrder(req.cancelOrderId);
                             req.future.complete(order);
                             break;
-                        case displayRequest:
-                            lob.displayBook();
+                        case priceRequest:
+                            lob.getCurrentPrice();
                             req.future.complete("Order Book");
                             break;
                         case shutDown:

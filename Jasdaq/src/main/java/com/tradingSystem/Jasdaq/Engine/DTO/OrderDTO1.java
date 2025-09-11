@@ -1,14 +1,16 @@
-package com.tradingSystem.Jasdaq.Engine;
+package com.tradingSystem.Jasdaq.Engine.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RequestOrder {
+@Builder
+public class OrderDTO1 {
 
     @NotBlank(message = "Please provide company symbol")
     private String symbol;
@@ -24,5 +26,10 @@ public class RequestOrder {
 
     @NotBlank(message = "Please quote price")
     private long price;
+
+    @NotBlank(message = "Please provide company id")
+    private String companyId;
+
+    
     
 }

@@ -12,8 +12,9 @@ public class IdGenerator {
 
     public static String nextID(String symbol, char t){
         long seq=counter.incrementAndGet();
+        String countryCode="IN";
         long date=Instant.now().getEpochSecond() * 1_000_000_000L + Instant.now().getNano();
-        return symbol+"-"+date+"-"+seq+"-"+t;
+        return symbol+"-"+date+"-"+seq+"-"+countryCode+t;
     }
     
 }

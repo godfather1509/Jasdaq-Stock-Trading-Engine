@@ -4,14 +4,19 @@ import java.util.HashMap;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.tradingSystem.Jasdaq.Engine.Order;
+import com.tradingSystem.Jasdaq.Engine.OrderRepository;
 import com.tradingSystem.Jasdaq.Engine.Trade;
 import com.tradingSystem.Jasdaq.Engine.matchingEngine.LOB.*;
 import com.tradingSystem.Jasdaq.generator.IdGenerator;
 
-@Service // this annotation makes it part of springboot project and indicates that this class handels buisness logic
+import jakarta.annotation.PostConstruct;
+
+@Service // this annotation makes it part of springboot project and indicates that this
+         // class handels buisness logic
 public class MatchingEngine {
     // Different MatchingEngine instances are made for stocks of different companies
     // In market an order only becomes trade when it is executed(bought/sold)
@@ -36,8 +41,20 @@ public class MatchingEngine {
 
     private String symbol;
 
-    public void setSymbol(String sym){
-        this.symbol=sym;
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public void setSymbol(String sym) {
+        this.symbol = sym;
+    }
+
+    @PostConstruct
+    public void loadOrderMap(){
+
+        for(Order order:orderRepository.findByCompanyCompanyId(symbol)){
+            orderMap.put(order.getOrderId(), order);
+        }
+
     }
 
     public long getBuyShares() {
@@ -60,21 +77,21 @@ public class MatchingEngine {
         return currentPrice;
     }
 
-    public record TradeResults(Queue<Trade> queue, Order order){
-        // java records is a class with certain common functions pre-implemented 
+    public record TradeResults(Queue<Trade> queue, Order order) {
+        // java records is a class with certain common functions pre-implemented
         /*
-        Getters
-        Setters
-        Constructors
-        equals etc.
-        all above boilerplate functions come pre implemented in records
-        */
+         * Getters
+         * Constructors
+         * equals etc.
+         * all above boilerplate functions come pre implemented in records
+         * Records are immutable, so you cannot change queue or order after creation
+         */
     }
 
     public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares) {
         if (!orderMap.containsKey(orderId)) {
             long entryTime = System.currentTimeMillis(); // get time when order is placed
-            order = new Order(orderId, buySell, price, shares, entryTime, marketLimit);
+            order = new Order(orderId, symbol, buySell, price, shares, entryTime, marketLimit);
             if (marketLimit) {
                 // if it is a market order
                 Order order1 = executeMarketOrder(order);
@@ -120,8 +137,8 @@ public class MatchingEngine {
                     return new TradeResults(queue, order);
                 } else {
                     // if order does not execute
-                    order=placeOrder(order);
-                    return new TradeResults(queue, order); // this will add order in book
+                    order = placeOrder(order); // this will add order in book
+                    return new TradeResults(queue, order);
                     // System.out.println("Order Placed");
                 }
             }
@@ -180,7 +197,6 @@ public class MatchingEngine {
     private Order placeOrder(Order order) {
         // place order recognizes order type(buy or sell) and insert it into respective
         // Limits
-
         order.marketLimit = false; // limit order
         orderMap.put(order.orderId, order); // insert order in order map
         order.finalPrice = order.getPrice(); // limit orders sell only at asked prices
@@ -327,7 +343,7 @@ public class MatchingEngine {
                 limit.pop(); // remove the 1st order from list
                 limit.limitVolume -= order.shares;
                 if (isBuy) {
-                    trade = new Trade(IdGenerator.nextID(symbol,'t'), incomingOrder.orderId, order.orderId,
+                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
                             order.getPrice(), order.shares, symbol);
                     queue.add(trade);
                 } else {

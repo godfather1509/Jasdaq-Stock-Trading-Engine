@@ -1,5 +1,7 @@
 package com.tradingSystem.Jasdaq.Engine;
 
+import com.tradingSystem.Jasdaq.companies.Companies;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
@@ -7,6 +9,8 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "Trades")
@@ -29,6 +33,10 @@ public class Trade {
     private int quantity;
 
     private long tradeTime;
+
+    @ManyToOne
+    @JoinColumn(name = "companyId")
+    private Companies company;
 
     @PrePersist
     protected void onCreate(){

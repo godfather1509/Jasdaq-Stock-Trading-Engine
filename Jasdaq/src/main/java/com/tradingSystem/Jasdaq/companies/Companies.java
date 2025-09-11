@@ -4,7 +4,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -34,12 +34,12 @@ public class Companies {
     private long currentPrice;
     private int shares;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "orderId")
-    private List<Order> orderIds;
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<Order> orders;
+    // orphanRemoval true means if we remove an order from orders list then it will be removed from Order talble as well
+    // 
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "tradeId")
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Trade> tradeIds;
 
     public Companies(String id, String symbol, String name, long currentPrice, int shares){
