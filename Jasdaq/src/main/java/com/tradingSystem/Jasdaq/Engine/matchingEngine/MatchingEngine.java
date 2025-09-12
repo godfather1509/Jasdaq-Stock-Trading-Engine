@@ -1,8 +1,10 @@
 package com.tradingSystem.Jasdaq.Engine.matchingEngine;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class MatchingEngine {
 
     Trade trade;
     Queue<Trade> queue = new ArrayDeque<>();
+    List<Trade> list=new LinkedList<>();
     private Order order;
     private LimitsRBTree buyTree = new LimitsRBTree(true);
     private LimitsRBTree sellTree = new LimitsRBTree(false);
@@ -40,6 +43,7 @@ public class MatchingEngine {
     private Limit sellLimit;
 
     private String symbol;
+    private String companyId;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -48,10 +52,14 @@ public class MatchingEngine {
         this.symbol = sym;
     }
 
+    public void setCompanyId(String companyId){
+        this.companyId=companyId;
+    }
+
     @PostConstruct
     public void loadOrderMap(){
 
-        for(Order order:orderRepository.findByCompanyCompanyId(symbol)){
+        for(Order order:orderRepository.findByCompanyCompanyId(companyId)){
             orderMap.put(order.getOrderId(), order);
         }
 
@@ -77,7 +85,7 @@ public class MatchingEngine {
         return currentPrice;
     }
 
-    public record TradeResults(Queue<Trade> queue, Order order) {
+    public record TradeResults(List<Trade> list,Order order) {
         // java records is a class with certain common functions pre-implemented
         /*
          * Getters
@@ -101,7 +109,7 @@ public class MatchingEngine {
                 } else {
                     // System.out.println("Order Executed");
                     // System.out.println(order1.toString());
-                    return new TradeResults(queue, order1);
+                    return new TradeResults(list, order1);
                 }
                 // market order is order that executes immediately at best available price
             } else {
@@ -134,11 +142,11 @@ public class MatchingEngine {
                  */
                 if (executed) {
                     // System.out.println("Order Executed");
-                    return new TradeResults(queue, order);
+                    return new TradeResults(list, order);
                 } else {
                     // if order does not execute
                     order = placeOrder(order); // this will add order in book
-                    return new TradeResults(queue, order);
+                    return new TradeResults(list, order);
                     // System.out.println("Order Placed");
                 }
             }
@@ -345,11 +353,11 @@ public class MatchingEngine {
                 if (isBuy) {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
                             order.getPrice(), order.shares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 } else {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
                             order.getPrice(), order.shares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 }
 
                 orderMap.remove(order.orderId); // remove the order from map
@@ -370,11 +378,11 @@ public class MatchingEngine {
                 if (isBuy) {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
                             order.getPrice(), order.shares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 } else {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
                             order.getPrice(), order.shares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 }
                 limit.pop();
                 limit.limitVolume -= order.shares;
@@ -388,11 +396,11 @@ public class MatchingEngine {
                 if (isBuy) {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
                             order.getPrice(), remainingShares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 } else {
                     trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
                             order.getPrice(), remainingShares, symbol);
-                    queue.add(trade);
+                    list.add(trade);
                 }
                 order.shares -= remainingShares;
                 totalShares -= remainingShares;

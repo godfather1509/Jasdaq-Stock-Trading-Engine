@@ -6,19 +6,20 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+@SuppressWarnings("null")
 @Configuration
 @EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
+    }
 
     @Override
-    public void registerStompEndpoints(@SuppressWarnings("null") StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").withSockJS();
-   }
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
 
-    @Override
-    public void configureMessageBroker(@SuppressWarnings("null") MessageBrokerRegistry registry) {
+        registry.enableSimpleBroker("/topic", "/queue");
         registry.setApplicationDestinationPrefixes("/app");
-        registry.enableSimpleBroker("/jasdaq");
-   }
-    
+        registry.setUserDestinationPrefix("/user");
+    }
 }

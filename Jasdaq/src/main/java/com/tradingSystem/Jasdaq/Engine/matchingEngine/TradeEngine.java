@@ -18,11 +18,12 @@ public class TradeEngine{
     MatchingEngine lob;
 
 
-    public TradeEngine(String sym){
+    public TradeEngine(String sym, String companyId){
         this.running=true;
         this.symbol=sym;
         lob=new MatchingEngine();
         lob.setSymbol(sym);
+        lob.setCompanyId(companyId);
         this.worker=new Thread(this::runnerz, "Matching Engine Started"); // initialize the thread
         // this::runnerz will execute runnerz function as soon as this thread starts
         this.worker.start();
