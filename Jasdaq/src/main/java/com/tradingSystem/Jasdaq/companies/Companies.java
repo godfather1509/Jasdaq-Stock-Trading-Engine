@@ -37,8 +37,7 @@ public class Companies {
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Order> orders;
     // orphanRemoval true means if we remove an order from orders list then it will be removed from Order talble as well
-    // 
-
+    
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Trade> tradeIds;
 
@@ -48,6 +47,5 @@ public class Companies {
         this.name=name;
         this.currentPrice=currentPrice;
         this.shares=shares;
-    }
-        
+    }       
 }

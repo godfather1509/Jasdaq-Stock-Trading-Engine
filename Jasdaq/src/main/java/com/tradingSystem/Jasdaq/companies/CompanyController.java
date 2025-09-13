@@ -16,13 +16,13 @@ import java.util.Optional;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api/v1/companies")
+@RequestMapping("/api/v1")
 public class CompanyController {
 
     @Autowired
     private CompanyService companyService;
 
-    @GetMapping
+    @GetMapping("allCompanies")
     public ResponseEntity<List<Companies>> getAllCompanies()
     {
         return new ResponseEntity<List<Companies>>(companyService.allCompanies(), HttpStatus.OK);
@@ -35,7 +35,10 @@ public class CompanyController {
 
     @PostMapping("/post")
     public ResponseEntity<Companies> addNewCompany(@RequestBody RequestCompany request){
+        
+        boolean check=companyService.checkCompany(request.getSymbol());
 
+        if(!check){
         String id=IdGenerator.nextID(request.getSymbol(), 'c');
 
         Companies company=new Companies(id,request.getSymbol(),request.getName(), request.getCurrentPrice(),request.getShares());
@@ -43,5 +46,9 @@ public class CompanyController {
         Companies savedCompany=companyService.createCompany(company);
         
         return new ResponseEntity<>(savedCompany, HttpStatus.CREATED);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
     }
 }

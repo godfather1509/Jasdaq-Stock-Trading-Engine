@@ -311,7 +311,6 @@ public class LimitsRBTree {
 
   /* -------------------- Fix-up after deletion -------------------- */
 
-  @SuppressWarnings("null")
   private void fixDelete(Limit x, Limit xParent) {
     Limit cur = x;
     Limit parent = xParent;

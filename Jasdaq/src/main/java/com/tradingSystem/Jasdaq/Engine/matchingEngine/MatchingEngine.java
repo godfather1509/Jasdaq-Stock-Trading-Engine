@@ -6,7 +6,6 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.tradingSystem.Jasdaq.Engine.Order;
@@ -15,10 +14,9 @@ import com.tradingSystem.Jasdaq.Engine.Trade;
 import com.tradingSystem.Jasdaq.Engine.matchingEngine.LOB.*;
 import com.tradingSystem.Jasdaq.generator.IdGenerator;
 
-import jakarta.annotation.PostConstruct;
 
-@Service // this annotation makes it part of springboot project and indicates that this
-         // class handels buisness logic
+@Service 
+// this annotation makes it part of springboot project and indicates that this class handels buisness logic
 public class MatchingEngine {
     // Different MatchingEngine instances are made for stocks of different companies
     // In market an order only becomes trade when it is executed(bought/sold)
@@ -43,26 +41,21 @@ public class MatchingEngine {
     private Limit sellLimit;
 
     private String symbol;
-    private String companyId;
-
-    @Autowired
-    private OrderRepository orderRepository;
 
     public void setSymbol(String sym) {
         this.symbol = sym;
     }
 
-    public void setCompanyId(String companyId){
-        this.companyId=companyId;
-    }
 
-    @PostConstruct
-    public void loadOrderMap(){
-
-        for(Order order:orderRepository.findByCompanyCompanyId(companyId)){
-            orderMap.put(order.getOrderId(), order);
+    public void loadOrderMap(String compayId, OrderRepository orderRepository){
+        for(Order order:orderRepository.findByCompanyCompanyId(compayId)){
+            placeOrder(order);
         }
-
+        // System.out.println();
+        // System.out.println("company id:"+compayId);
+        // System.out.println("Map");
+        // System.out.println(">> "+buyLimitMap.toString());
+        // System.out.println();
     }
 
     public long getBuyShares() {
@@ -202,25 +195,6 @@ public class MatchingEngine {
         }
     }
 
-    private Order placeOrder(Order order) {
-        // place order recognizes order type(buy or sell) and insert it into respective
-        // Limits
-        order.marketLimit = false; // limit order
-        orderMap.put(order.orderId, order); // insert order in order map
-        order.finalPrice = order.getPrice(); // limit orders sell only at asked prices
-        if (order.buySell) {
-            // buy order
-            totalBuyShares += order.shares;
-            Order buy = buyOrder(order, order.getPrice(), order.orderId);
-            return buy;
-        } else {
-            // sell order
-            totalSellShares += order.shares;
-            Order sell = sellOrder(order, order.getPrice(), order.orderId);
-            return sell;
-        }
-    }
-
     private OrderWrapper executeLimitOrder(Order incomingOrder, LimitsRBTree tree, long totalShares) {
         Limit limit = tree.bestPrice(); // get priced limit from passed tree
         boolean isBuy = incomingOrder.buySell;
@@ -281,43 +255,6 @@ public class MatchingEngine {
         }
         // if a market order is cannot be executed fully then it is converted to limit
         // order with remaining no. of shares
-    }
-
-    private Order buyOrder(Order order, long unitPrice, String orderId) {
-        if (!buyLimitMap.containsKey(unitPrice)) {
-            // if limitMap does not contains price level
-            buyLimit = new Limit(unitPrice, true);
-            buyLimit.insert(order);// inser torder in new limit
-            buyLimitMap.put(unitPrice, buyLimit); // add new limit to limit map
-            buyTree.insert(buyLimit);
-        } else {
-            // limitmap contains list instance for given price
-            buyLimit = buyLimitMap.get(unitPrice);
-            if (buyLimit.isEmpty()) {
-                // insert new price level in tree
-                buyTree.insert(buyLimit);
-            }
-            buyLimit.insert(order); // insert order in tree
-        }
-        return order;
-    }
-
-    private Order sellOrder(Order order, long unitPrice, String orderId) {
-        if (!sellLimitMap.containsKey(unitPrice)) {
-            // if limit map does not contain limit with given price
-            sellLimit = new Limit(unitPrice, false); // initialize new limit list
-            sellLimit.insert(order); // insert new sell order in list
-            sellLimitMap.put(unitPrice, sellLimit); // put limit in limit map
-            sellTree.insert(sellLimit); // insert limit in tree
-        } else {
-            sellLimit = sellLimitMap.get(unitPrice);
-            if (sellLimit.isEmpty()) {
-                // insert price level in tree
-                sellTree.insert(sellLimit);
-            }
-            sellLimit.insert(order);
-        }
-        return order;
     }
 
     private OrderWrapper executeOrder(Order incomingOrder, LimitsRBTree tree, long totalShares) {
@@ -415,6 +352,61 @@ public class MatchingEngine {
         incomingOrder.eventTime = System.currentTimeMillis();
         currentPrice = order.getPrice(); // update current price of share
         return new OrderWrapper(incomingOrder, totalShares);
+    }
+
+    private Order placeOrder(Order order) {
+        // place order recognizes order type(buy or sell) and insert it into respective Limits
+        order.marketLimit = false; // limit order
+        orderMap.put(order.orderId, order); // insert order in order map
+        order.finalPrice = order.getPrice(); // limit orders sell only at asked prices
+        if (order.buySell) {
+            // buy order
+            totalBuyShares += order.shares;
+            Order buy = buyOrder(order, order.getPrice(), order.orderId);
+            return buy;
+        } else {
+            // sell order
+            totalSellShares += order.shares;
+            Order sell = sellOrder(order, order.getPrice(), order.orderId);
+            return sell;
+        }
+    }
+
+    private Order buyOrder(Order order, long unitPrice, String orderId) {
+        if (!buyLimitMap.containsKey(unitPrice)) {
+            // if limitMap does not contains price level
+            buyLimit = new Limit(unitPrice, true);
+            buyLimit.insert(order);// inser torder in new limit
+            buyLimitMap.put(unitPrice, buyLimit); // add new limit to limit map
+            buyTree.insert(buyLimit);
+        } else {
+            // limitmap contains list instance for given price
+            buyLimit = buyLimitMap.get(unitPrice);
+            if (buyLimit.isEmpty()) {
+                // insert new price level in tree
+                buyTree.insert(buyLimit);
+            }
+            buyLimit.insert(order); // insert order in tree
+        }
+        return order;
+    }
+
+    private Order sellOrder(Order order, long unitPrice, String orderId) {
+        if (!sellLimitMap.containsKey(unitPrice)) {
+            // if limit map does not contain limit with given price
+            sellLimit = new Limit(unitPrice, false); // initialize new limit list
+            sellLimit.insert(order); // insert new sell order in list
+            sellLimitMap.put(unitPrice, sellLimit); // put limit in limit map
+            sellTree.insert(sellLimit); // insert limit in tree
+        } else {
+            sellLimit = sellLimitMap.get(unitPrice);
+            if (sellLimit.isEmpty()) {
+                // insert price level in tree
+                sellTree.insert(sellLimit);
+            }
+            sellLimit.insert(order);
+        }
+        return order;
     }
 
     public void displayBook() {

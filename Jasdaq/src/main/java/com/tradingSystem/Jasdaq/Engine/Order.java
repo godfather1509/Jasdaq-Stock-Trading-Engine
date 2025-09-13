@@ -3,12 +3,11 @@ package com.tradingSystem.Jasdaq.Engine;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tradingSystem.Jasdaq.companies.Companies;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Data;
@@ -56,13 +55,9 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "companyId")
+    @JsonIgnore
     private Companies company;
 
-
-    @PrePersist
-    protected void onCreate() {
-        this.entryTime = System.currentTimeMillis();
-    }
 
     public Order(String orderId, String symbol, boolean buySell, long price, int shares, long entryTime, boolean marketLimit) {
         this.orderId = orderId;
@@ -76,5 +71,9 @@ public class Order {
         this.nextOrder = null;
         this.prevOrder = null;
         this.finalPrice = 0;
+    }
+
+    public String toString(){
+        return orderId+" "+symbol+" "+buySell+" "+marketLimit+" "+status+" "+shares+" "+price+" "+entryTime+" "+finalPrice;
     }
 }

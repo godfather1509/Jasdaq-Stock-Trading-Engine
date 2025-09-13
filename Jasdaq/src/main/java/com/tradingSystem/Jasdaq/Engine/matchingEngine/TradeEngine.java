@@ -15,7 +15,7 @@ public class TradeEngine{
     private volatile boolean running;
     private final Thread worker; // decalre a thread
     String symbol;
-    MatchingEngine lob;
+    public MatchingEngine lob;
 
 
     public TradeEngine(String sym, String companyId){
@@ -23,7 +23,6 @@ public class TradeEngine{
         this.symbol=sym;
         lob=new MatchingEngine();
         lob.setSymbol(sym);
-        lob.setCompanyId(companyId);
         this.worker=new Thread(this::runnerz, "Matching Engine Started"); // initialize the thread
         // this::runnerz will execute runnerz function as soon as this thread starts
         this.worker.start();

@@ -65,7 +65,7 @@ public class EngineService {
             if (result instanceof TradeResults tradeResults) {
                 List<Trade> list = tradeResults.list();
                 Order order = tradeResults.order();
-
+                companyService.setCurrentPrice(price, companyId);
                 saveToRedis(order, list);
                 saveToKafka(order, list);
 
@@ -77,6 +77,40 @@ public class EngineService {
 
             }
         });
+    }
+
+    public void cancelOrder(String orderId, String companyId) {
+
+        TradeEngine engine = companyService.getTradeEngine(companyId);
+        CompletableFuture<Object> obj = engine.submitCancelrequest(orderId);
+
+        obj.whenComplete((result, throwables)->{
+
+        });
+
+    }
+
+    // helper function
+
+    @Async("persistenceExecutor") // makes function async
+    private void saveToDatabaseAsync(List<Trade> list, Order order) {
+        try {
+            orderRepository.save(order);
+            tradeRepository.saveAll(list);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Async("persistenceExecutor") // makes function async
+    private void deleteFromDatabaseAsync(Order order){
+
+        try {
+            orderRepository.delete(order);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private String buildBroadcastMessage(String companyId, Order order) {
@@ -91,38 +125,6 @@ public class EngineService {
         } catch (Exception e) {
             e.printStackTrace();
             return companyId+"-"+order.finalPrice+order.eventTime;
-        }
-    }
-
-    public Order cancelOrder(String orderId, String companyId) {
-
-        TradeEngine engine = companyService.getTradeEngine(companyId);
-        CompletableFuture<Object> obj = engine.submitCancelrequest(orderId);
-
-        try {
-            Object result = obj.get();
-
-            if (result instanceof Order order) {
-                return order;
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-
-    }
-
-    // helper function
-
-    @Async("persistenceExecutor") // makes function async
-    private void saveToDatabaseAsync(List<Trade> list, Order order) {
-        try {
-            orderRepository.save(order);
-            tradeRepository.saveAll(list);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

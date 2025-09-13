@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.tradingSystem.Jasdaq.Engine.OrderRepository;
 import com.tradingSystem.Jasdaq.Engine.matchingEngine.TradeEngine;
 
 import jakarta.annotation.PostConstruct;
@@ -17,12 +18,20 @@ public class CompanyService {
     @Autowired
     private CompanyRepository companyRepository;
 
-    private final ConcurrentHashMap<String, TradeEngine> companyMap = new ConcurrentHashMap<>();
+    @Autowired
+    private OrderRepository orderRepository;
+
+    private final ConcurrentHashMap<String, TradeEngine> engineMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<String, Companies> companyMap=new ConcurrentHashMap<>();
 
     @PostConstruct
     public void loadCompanyMap() {
         for (Companies company : companyRepository.findAll()) {
-            companyMap.put(company.getCompanyId(), new TradeEngine(company.getSymbol(), company.getCompanyId()));
+            TradeEngine engine=new TradeEngine(company.getSymbol(), company.getCompanyId());
+            engineMap.put(company.getCompanyId(), engine);
+            companyMap.put(company.getSymbol(), company);
+            engine.lob.loadOrderMap(company.getCompanyId(),orderRepository);
         }
     }
 
@@ -35,15 +44,37 @@ public class CompanyService {
     }
 
     public Companies createCompany(Companies company) {
-        companyMap.put(company.getCompanyId(), new TradeEngine(company.getSymbol(), company.getCompanyId()));
-        TradeEngine engine = companyMap.get(company.getCompanyId());
-        engine.submitAddRequest(false, company.getCurrentPrice(), company.getShares(), false);
+        engineMap.put(company.getCompanyId(), new TradeEngine(company.getSymbol(), company.getCompanyId())); 
+        // initialize new trade engine for new company
+        companyMap.put(company.getSymbol(), company);
+        PlaceOrder.saveOrder(false, company.getCurrentPrice(), company.getShares(), false, company.getCompanyId());
         companyRepository.save(company);
         return company;
     }
 
     public TradeEngine getTradeEngine(String companyId) {
-        return companyMap.get(companyId);
+        return engineMap.get(companyId);
+    }
+
+    public void setCurrentPrice(long price, String companyId){
+        Optional<Companies> optionalCompany=companyRepository.findById(companyId);
+
+        if(optionalCompany.isPresent()){
+            Companies company=optionalCompany.get();
+            company.setCurrentPrice(price);
+        }
+        else{
+            System.out.println("Company not found");
+        }
+    }
+
+    public boolean checkCompany(String symbol){
+        if(companyMap.containsKey(symbol)){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
 }
