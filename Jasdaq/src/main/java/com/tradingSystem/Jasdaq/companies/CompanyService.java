@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.tradingSystem.Jasdaq.Engine.OrderRepository;
@@ -21,9 +22,12 @@ public class CompanyService {
     @Autowired
     private OrderRepository orderRepository;
 
-    private final ConcurrentHashMap<String, TradeEngine> engineMap = new ConcurrentHashMap<>();
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
-    private final ConcurrentHashMap<String, Companies> companyMap=new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, TradeEngine> engineMap = new ConcurrentHashMap<>();
+
+    private ConcurrentHashMap<String, Companies> companyMap=new ConcurrentHashMap<>();
 
     @PostConstruct
     public void loadCompanyMap() {
@@ -47,8 +51,8 @@ public class CompanyService {
         engineMap.put(company.getCompanyId(), new TradeEngine(company.getSymbol(), company.getCompanyId())); 
         // initialize new trade engine for new company
         companyMap.put(company.getSymbol(), company);
-        PlaceOrder.saveOrder(false, company.getCurrentPrice(), company.getShares(), false, company.getCompanyId());
         companyRepository.save(company);
+        eventPublisher.publishEvent(new PlaceOrderEvent(this,false, company.getCurrentPrice(), company.getShares(), false, company.getCompanyId()));
         return company;
     }
 

@@ -54,7 +54,7 @@ public class Order {
     // we only need these for linked list not for storage
 
     @ManyToOne
-    @JoinColumn(name = "companyId")
+    @JoinColumn(name = "companyId", nullable = true)
     @JsonIgnore
     private Companies company;
 
