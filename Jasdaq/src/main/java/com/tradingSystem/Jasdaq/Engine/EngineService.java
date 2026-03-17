@@ -17,6 +17,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tradingSystem.Jasdaq.Engine.matchingEngine.TradeEngine;
 import com.tradingSystem.Jasdaq.Engine.matchingEngine.MatchingEngine.TradeResults;
+import com.tradingSystem.Jasdaq.companies.Companies;
 import com.tradingSystem.Jasdaq.companies.CompanyService;
 import com.tradingSystem.Jasdaq.companies.PlaceOrderEvent;
 import com.tradingSystem.Jasdaq.Engine.net.MulticastBroadcaster;
@@ -72,9 +73,7 @@ public class EngineService {
             if (result instanceof TradeResults tradeResults) {
                 List<Trade> list = tradeResults.list();
                 Order order = tradeResults.order();
-                order.setCompany(companyService.singleCompany(companyId).get());
-
-                companyService.setCurrentPrice(price, companyId);
+                companyService.setCurrentPrice(order.getPrice(), companyId);
                 saveToRedis(order, list);
                 saveToKafka(order, list);
 
@@ -169,7 +168,9 @@ public class EngineService {
     private void saveToKafka(Order order, List<Trade> list) {
         String objectId = order.orderId;
         try {
+            // System.out.println(">>Order: "+order.toString());
             String orderJson = objectMapper.writeValueAsString(order);
+            System.out.println(">> Order:"+orderJson);
             kafkaTemplate.send("orders-topic", objectId, orderJson);
 
             if (list != null) {
@@ -188,10 +189,12 @@ public class EngineService {
 
     @KafkaListener(topics = "orders-topic", groupId = "my-group")
     public void kafkaOrderConsumer(String message){
-        System.out.println("Received Message"+message);
+        // System.out.println("Received Message"+message);
         try {
         Order order=objectMapper.readValue(message, Order.class);
-        System.out.println(">> Received Order:"+order.toString());
+        // System.out.println(">> Received Order:"+order.toString());
+        Companies company=companyService.getCompanyBySymbol(order.getSymbol());
+        order.setCompany(company);
         saveOrderToDatabaseAsync(order);
         } catch (Exception e) {
             System.out.println(">> Error Trace:");
@@ -201,10 +204,10 @@ public class EngineService {
 
     @KafkaListener(topics = "trades-topic", groupId = "my-group")
     public void kafkaTradeConsumer(String message){
-        System.out.println("Received Message"+message);
+        // System.out.println("Received Message"+message);
         try {
             Trade trade=objectMapper.readValue(message, Trade.class);
-            System.out.println(">> Received Trade:"+trade.toString());
+            // System.out.println(">> Received Trade:"+trade.toString());
             saveTradeToDatabase(trade);
         } catch (Exception e) {
             System.out.println(">> Error Trace:");

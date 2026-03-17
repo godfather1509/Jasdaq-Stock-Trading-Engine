@@ -12,7 +12,7 @@ function Sidebar() {
             try {
                 const res = await api.get("/allCompanies");
                 console.log(res.data);
-                console.log(typeof(res.data))
+                console.log(typeof (res.data))
                 setCompanies(res.data)
             } catch (error) {
                 console.error(error);
@@ -31,8 +31,9 @@ function Sidebar() {
             >
                 <div className="h-full px-3 py-4 overflow-y-auto bg-black text-white">
                     {/* Sidebar Title */}
-                    <h2 className="text-2xl font-bold mb-6 px-2 text-center">JASDAQ</h2>
-
+                    <NavLink to="/" className="flex items-center rtl:space-x-reverse">
+                        <span className="text-2xl font-bold mb-6 px-2 text-center">JASDAQ</span>
+                    </NavLink>
                     <ul className="space-y-2 font-medium">
                         {companies.map((company, index) => (
                             <li key={index}>

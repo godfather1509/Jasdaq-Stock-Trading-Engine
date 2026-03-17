@@ -81,4 +81,8 @@ public class CompanyService {
         }
     }
 
+    public Companies getCompanyBySymbol(String symbol){
+        return companyMap.get(symbol);
+    }
+
 }

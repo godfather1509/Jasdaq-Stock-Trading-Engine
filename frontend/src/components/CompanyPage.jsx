@@ -52,25 +52,19 @@ function CompanyPage() {
     }, [companyId]);
 
     return (
-        <div className="p-6 text-black grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Company Info */}
-            <div className="text-center">
-                <h1 className="text-3xl font-bold text-black">{c.name}</h1>
-                <p className="text-black">{c.symbol}</p>
-                <p className="text-xl font-semibold mt-2 text-black">
-                    Current Price: ${c.currentPrice}
-                </p>
+        <div className="p-6 text-black space-y-8">
+            {/* Top Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Company Info */}
+                <div className="text-center">
+                    <h1 className="text-3xl font-bold text-black">{c.name}</h1>
+                    <p className="text-black">{c.symbol}</p>
+                    <p className="text-xl font-semibold mt-2 text-black">
+                        Current Price: ${c.currentPrice}
+                    </p>
 
-                {/* Place Order */}
-                <div className="mt-4">
-                    <button
-                        className="bg-indigo-600 text-white px-6 py-2 rounded-2xl shadow hover:bg-indigo-700 transition"
-                        onClick={() => setShowForm(!showForm)}
-                    >
-                        {showForm ? "Cancel" : "Place Order"}
-                    </button>
-
-                    {showForm && (
+                    {/* Place Order */}
+                    <div className="mt-4">
                         <div className="mt-4 p-4 rounded-2xl shadow-md border bg-white">
                             <form
                                 onSubmit={handleSubmit}
@@ -122,26 +116,69 @@ function CompanyPage() {
                                 </button>
                             </form>
                         </div>
-                    )}
+                    </div>
+                </div>
+
+                {/* Graph */}
+                <div className="bg-white mt-16 p-4 rounded-2xl shadow-md h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="time" />
+                            <YAxis />
+                            <Tooltip />
+                            <Line
+                                type="monotone"
+                                dataKey="price"
+                                stroke="#4F46E5"
+                                strokeWidth={2}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Graph */}
-            <div className="bg-white p-4 rounded-2xl shadow-md h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line
-                            type="monotone"
-                            dataKey="price"
-                            stroke="#4F46E5"
-                            strokeWidth={2}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
+            {/* Orders Table */}
+            <div className="bg-white p-4 rounded-2xl shadow-md">
+                <h2 className="text-xl font-semibold mb-4">Orders</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="border border-gray-300 px-4 py-2">Order ID</th>
+                                <th className="border border-gray-300 px-4 py-2">Type</th>
+                                <th className="border border-gray-300 px-4 py-2">Buy/Sell</th>
+                                <th className="border border-gray-300 px-4 py-2">Quantity</th>
+                                <th className="border border-gray-300 px-4 py-2">Price</th>
+                                <th className="border border-gray-300 px-4 py-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {o.length > 0 ? (
+                                o.map((o, idx) => (
+                                    <tr key={idx} className="text-center">
+                                        <td className="border border-gray-300 px-4 py-2">{o.orderId}</td>
+                                        <td className="border border-gray-300 px-4 py-2">{o.marketLimit? "Market Order":"Limit Order"}</td>
+                                        <td className="border border-gray-300 px-4 py-2 capitalize">{o.buySell?"Buy Order":"Sell Order"}</td>
+                                        <td className="border border-gray-300 px-4 py-2">{o.shares}</td>
+                                        <td className="border border-gray-300 px-4 py-2">
+                                            {o.finalPrice ? `$${o.finalPrice}` : "-"}
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-2">
+                                            {o.status === true ? "Executed" : o.status === false ? "Pending" : o.status}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-4 text-gray-500">
+                                        No orders yet.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

@@ -74,6 +74,6 @@ public class Order {
     }
 
     public String toString(){
-        return orderId+" "+symbol+" "+buySell+" "+marketLimit+" "+status+" "+shares+" "+price+" "+entryTime+" "+finalPrice;
+        return orderId+" "+symbol+" "+buySell+" "+marketLimit+" "+status+" "+shares+" "+price+" "+entryTime+" "+finalPrice+" "+company.toString();
     }
 }

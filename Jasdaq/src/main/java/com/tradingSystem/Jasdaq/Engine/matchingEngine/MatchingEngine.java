@@ -49,7 +49,9 @@ public class MatchingEngine {
 
     public void loadOrderMap(String compayId, OrderRepository orderRepository){
         for(Order order:orderRepository.findByCompanyCompanyId(compayId)){
-            placeOrder(order);
+            if(!order.status){
+                placeOrder(order);
+            }
         }
         // System.out.println();
         // System.out.println("company id:"+compayId);
