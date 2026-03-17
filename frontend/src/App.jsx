@@ -5,39 +5,27 @@ import CompanyPage from './components/CompanyPage'
 
 function App() {
 
-  const rounter = createBrowserRouter(
+  const router = createBrowserRouter(
     [
       {
         path: "/",
-        element:
-          <>
-            {/* <Sidebar /> */}
-            <Home />
-          </>
+        element: <Home />
       },
       {
         path: "/company/:companySymbol/:companyId",
-        element:
-          <div className="flex">
-            {/* Sidebar (fixed width) */}
-            <div className="w-64">
-              <Sidebar />
-            </div>
-
-            {/* Main content expands to fill remaining space */}
-            <div className="flex-1">
+        element: (
+          <div className="flex bg-gray-50 min-h-screen">
+            <Sidebar />
+            <div className="flex-1 ml-64">
               <CompanyPage />
             </div>
           </div>
+        )
       }
     ]
   )
 
-  return (
-    <>
-      <RouterProvider router={rounter} />
-    </>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App

@@ -35,6 +35,7 @@ public class Limit {
     public void insert(Order order) {
         // insert element at the end
         // order placed first should be executed 1st
+        limitVolume += order.shares;
         if (head == null) {
             head = order;
             tail = head;
@@ -47,7 +48,6 @@ public class Limit {
         order.prevOrder = tail;
         tail = order;
         size++;
-        limitVolume+=order.shares;
     }
 
     public Order delete(String orderId) {

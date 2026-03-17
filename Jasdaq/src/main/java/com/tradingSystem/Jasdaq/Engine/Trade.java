@@ -1,20 +1,23 @@
 package com.tradingSystem.Jasdaq.Engine;
 
 import com.tradingSystem.Jasdaq.companies.Companies;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "Trades")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Trade {
 
@@ -36,6 +39,7 @@ public class Trade {
 
     @ManyToOne
     @JoinColumn(name = "companyId")
+    @JsonBackReference
     private Companies company;
 
     @PrePersist
@@ -52,5 +56,17 @@ public class Trade {
         this.price = price;
         this.quantity = quantity;
     }
-    
+
+    @Override
+    public String toString() {
+        return "Trade{" +
+                "tradeId='" + tradeId + '\'' +
+                ", symbol='" + symbol + '\'' +
+                ", buyOrderId='" + buyOrderId + '\'' +
+                ", sellOrderId='" + sellOrderId + '\'' +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                ", tradeTime=" + tradeTime +
+                '}';
+    }
 }

@@ -1,0 +1,925 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.tradingSystem:Jasdaq >----------------------
+[INFO] Building Jasdaq 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.5:run (default-cli) > test-compile @ Jasdaq >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ Jasdaq ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ Jasdaq ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 28 source files with javac [debug parameters release 17] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ Jasdaq ---
+[INFO] skip non existing resourceDirectory C:\Users\ayush\OneDrive\Desktop\Programming\Java Full Stack\HFT System\Jasdaq\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ Jasdaq ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 17] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.5.5:run (default-cli) < test-compile @ Jasdaq <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.5:run (default-cli) @ Jasdaq ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.5)
+
+2026-03-17T23:15:45.601+05:30  INFO 15840 --- [Jasdaq] [           main] c.t.Jasdaq.JasdaqApplication             : Starting JasdaqApplication using Java 17.0.12 with PID 15840 (C:\Users\ayush\OneDrive\Desktop\Programming\Java Full Stack\HFT System\Jasdaq\target\classes started by ayush in C:\Users\ayush\OneDrive\Desktop\Programming\Java Full Stack\HFT System\Jasdaq)
+2026-03-17T23:15:45.603+05:30  INFO 15840 --- [Jasdaq] [           main] c.t.Jasdaq.JasdaqApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-03-17T23:15:46.214+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-17T23:15:46.215+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-17T23:15:46.349+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 125 ms. Found 3 JPA repository interfaces.
+2026-03-17T23:15:46.366+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-17T23:15:46.367+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-03-17T23:15:46.383+05:30  INFO 15840 --- [Jasdaq] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tradingSystem.Jasdaq.companies.CompanyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-17T23:15:46.383+05:30  INFO 15840 --- [Jasdaq] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tradingSystem.Jasdaq.Engine.OrderRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-17T23:15:46.384+05:30  INFO 15840 --- [Jasdaq] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tradingSystem.Jasdaq.Engine.TradeRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-17T23:15:46.384+05:30  INFO 15840 --- [Jasdaq] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 8 ms. Found 0 Redis repository interfaces.
+2026-03-17T23:15:46.958+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-03-17T23:15:46.971+05:30  INFO 15840 --- [Jasdaq] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-17T23:15:46.971+05:30  INFO 15840 --- [Jasdaq] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
+2026-03-17T23:15:47.026+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-17T23:15:47.028+05:30  INFO 15840 --- [Jasdaq] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1382 ms
+2026-03-17T23:15:47.172+05:30  INFO 15840 --- [Jasdaq] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-17T23:15:47.231+05:30  INFO 15840 --- [Jasdaq] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
+2026-03-17T23:15:47.264+05:30  INFO 15840 --- [Jasdaq] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-17T23:15:47.516+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-17T23:15:47.543+05:30  INFO 15840 --- [Jasdaq] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-17T23:15:47.867+05:30  INFO 15840 --- [Jasdaq] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@71668a67
+2026-03-17T23:15:47.869+05:30  INFO 15840 --- [Jasdaq] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-17T23:15:47.924+05:30  WARN 15840 --- [Jasdaq] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-17T23:15:47.943+05:30  INFO 15840 --- [Jasdaq] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.40
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-17T23:15:48.825+05:30  INFO 15840 --- [Jasdaq] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-17T23:15:48.900+05:30  INFO 15840 --- [Jasdaq] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol from companies c1_0
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 where o1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+Hibernate: select o1_0.order_id,o1_0.buy_sell,o1_0.company_id,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from orders o1_0 left join companies c1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select c1_0.company_id,c1_0.current_price,c1_0.name,c1_0.shares,c1_0.symbol,o1_0.company_id,o1_0.order_id,o1_0.buy_sell,o1_0.entry_time,o1_0.event_time,o1_0.final_price,o1_0.market_limit,o1_0.price,o1_0.shares,o1_0.status,o1_0.symbol from companies c1_0 left join orders o1_0 on c1_0.company_id=o1_0.company_id where c1_0.company_id=?
+Hibernate: select ti1_0.company_id,ti1_0.trade_id,ti1_0.buy_order_id,ti1_0.price,ti1_0.quantity,ti1_0.sell_order_id,ti1_0.symbol,ti1_0.trade_time from trades ti1_0 where ti1_0.company_id=?
+2026-03-17T23:15:49.818+05:30  WARN 15840 --- [Jasdaq] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-17T23:15:50.208+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-03-17T23:15:50.208+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@41843b88]]
+2026-03-17T23:15:50.210+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-03-17T23:15:50.226+05:30  INFO 15840 --- [Jasdaq] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-03-17T23:15:50.261+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.clients.consumer.ConsumerConfig    : ConsumerConfig values: 
+	allow.auto.create.topics = true
+	auto.commit.interval.ms = 5000
+	auto.include.jmx.reporter = true
+	auto.offset.reset = earliest
+	bootstrap.servers = [localhost:9092]
+	check.crcs = true
+	client.dns.lookup = use_all_dns_ips
+	client.id = consumer-my-group-1
+	client.rack = 
+	connections.max.idle.ms = 540000
+	default.api.timeout.ms = 60000
+	enable.auto.commit = false
+	enable.metrics.push = true
+	exclude.internal.topics = true
+	fetch.max.bytes = 52428800
+	fetch.max.wait.ms = 500
+	fetch.min.bytes = 1
+	group.id = my-group
+	group.instance.id = null
+	group.protocol = classic
+	group.remote.assignor = null
+	heartbeat.interval.ms = 3000
+	interceptor.classes = []
+	internal.leave.group.on.close = true
+	internal.throw.on.fetch.stable.offset.unsupported = false
+	isolation.level = read_uncommitted
+	key.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+	max.partition.fetch.bytes = 1048576
+	max.poll.interval.ms = 300000
+	max.poll.records = 500
+	metadata.max.age.ms = 300000
+	metadata.recovery.strategy = none
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partition.assignment.strategy = [class org.apache.kafka.clients.consumer.RangeAssignor, class org.apache.kafka.clients.consumer.CooperativeStickyAssignor]
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retry.backoff.max.ms = 1000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.header.urlencode = false
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	session.timeout.ms = 45000
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	value.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+
+2026-03-17T23:15:50.303+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.c.t.i.KafkaMetricsCollector        : initializing Kafka metrics collector
+2026-03-17T23:15:50.408+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.9.1
+2026-03-17T23:15:50.408+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: f745dfdcee2b9851
+2026-03-17T23:15:50.408+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1773769550406
+2026-03-17T23:15:50.411+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.c.c.i.ClassicKafkaConsumer         : [Consumer clientId=consumer-my-group-1, groupId=my-group] Subscribed to topic(s): orders-topic
+2026-03-17T23:15:50.417+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.clients.consumer.ConsumerConfig    : ConsumerConfig values: 
+	allow.auto.create.topics = true
+	auto.commit.interval.ms = 5000
+	auto.include.jmx.reporter = true
+	auto.offset.reset = earliest
+	bootstrap.servers = [localhost:9092]
+	check.crcs = true
+	client.dns.lookup = use_all_dns_ips
+	client.id = consumer-my-group-2
+	client.rack = 
+	connections.max.idle.ms = 540000
+	default.api.timeout.ms = 60000
+	enable.auto.commit = false
+	enable.metrics.push = true
+	exclude.internal.topics = true
+	fetch.max.bytes = 52428800
+	fetch.max.wait.ms = 500
+	fetch.min.bytes = 1
+	group.id = my-group
+	group.instance.id = null
+	group.protocol = classic
+	group.remote.assignor = null
+	heartbeat.interval.ms = 3000
+	interceptor.classes = []
+	internal.leave.group.on.close = true
+	internal.throw.on.fetch.stable.offset.unsupported = false
+	isolation.level = read_uncommitted
+	key.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+	max.partition.fetch.bytes = 1048576
+	max.poll.interval.ms = 300000
+	max.poll.records = 500
+	metadata.max.age.ms = 300000
+	metadata.recovery.strategy = none
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	partition.assignment.strategy = [class org.apache.kafka.clients.consumer.RangeAssignor, class org.apache.kafka.clients.consumer.CooperativeStickyAssignor]
+	receive.buffer.bytes = 65536
+	reconnect.backoff.max.ms = 1000
+	reconnect.backoff.ms = 50
+	request.timeout.ms = 30000
+	retry.backoff.max.ms = 1000
+	retry.backoff.ms = 100
+	sasl.client.callback.handler.class = null
+	sasl.jaas.config = null
+	sasl.kerberos.kinit.cmd = /usr/bin/kinit
+	sasl.kerberos.min.time.before.relogin = 60000
+	sasl.kerberos.service.name = null
+	sasl.kerberos.ticket.renew.jitter = 0.05
+	sasl.kerberos.ticket.renew.window.factor = 0.8
+	sasl.login.callback.handler.class = null
+	sasl.login.class = null
+	sasl.login.connect.timeout.ms = null
+	sasl.login.read.timeout.ms = null
+	sasl.login.refresh.buffer.seconds = 300
+	sasl.login.refresh.min.period.seconds = 60
+	sasl.login.refresh.window.factor = 0.8
+	sasl.login.refresh.window.jitter = 0.05
+	sasl.login.retry.backoff.max.ms = 10000
+	sasl.login.retry.backoff.ms = 100
+	sasl.mechanism = GSSAPI
+	sasl.oauthbearer.clock.skew.seconds = 30
+	sasl.oauthbearer.expected.audience = null
+	sasl.oauthbearer.expected.issuer = null
+	sasl.oauthbearer.header.urlencode = false
+	sasl.oauthbearer.jwks.endpoint.refresh.ms = 3600000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.max.ms = 10000
+	sasl.oauthbearer.jwks.endpoint.retry.backoff.ms = 100
+	sasl.oauthbearer.jwks.endpoint.url = null
+	sasl.oauthbearer.scope.claim.name = scope
+	sasl.oauthbearer.sub.claim.name = sub
+	sasl.oauthbearer.token.endpoint.url = null
+	security.protocol = PLAINTEXT
+	security.providers = null
+	send.buffer.bytes = 131072
+	session.timeout.ms = 45000
+	socket.connection.setup.timeout.max.ms = 30000
+	socket.connection.setup.timeout.ms = 10000
+	ssl.cipher.suites = null
+	ssl.enabled.protocols = [TLSv1.2, TLSv1.3]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.3
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	value.deserializer = class org.apache.kafka.common.serialization.StringDeserializer
+
+2026-03-17T23:15:50.418+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.c.t.i.KafkaMetricsCollector        : initializing Kafka metrics collector
+2026-03-17T23:15:50.426+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.9.1
+2026-03-17T23:15:50.426+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: f745dfdcee2b9851
+2026-03-17T23:15:50.426+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1773769550426
+2026-03-17T23:15:50.427+05:30  INFO 15840 --- [Jasdaq] [           main] o.a.k.c.c.i.ClassicKafkaConsumer         : [Consumer clientId=consumer-my-group-2, groupId=my-group] Subscribed to topic(s): trades-topic
+2026-03-17T23:15:50.435+05:30  INFO 15840 --- [Jasdaq] [           main] c.t.Jasdaq.JasdaqApplication             : Started JasdaqApplication in 5.223 seconds (process running for 5.522)
+2026-03-17T23:15:50.658+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.658+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.660+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.660+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.660+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:50.660+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:50.784+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.784+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.785+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.787+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:50.785+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.787+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:50.910+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.910+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:50.910+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.910+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:50.910+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:50.911+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:51.111+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:51.112+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:51.112+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:51.157+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:51.157+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:51.157+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:51.594+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:51.594+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:51.595+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:51.687+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:51.688+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:51.688+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:52.372+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:52.372+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:52.372+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:52.588+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:52.588+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:52.588+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:53.283+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:53.283+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:53.283+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:53.623+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:53.623+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:53.623+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:54.216+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:54.216+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:54.216+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:54.637+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:54.637+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:54.637+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:55.248+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:55.248+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:55.248+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:55.535+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:55.535+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:55.535+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:56.238+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:56.238+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:56.238+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:56.550+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:56.550+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:56.550+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:57.109+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:57.109+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:57.110+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:57.514+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:57.516+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:57.516+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:58.119+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:58.119+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:58.119+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:58.492+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:58.492+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:58.492+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:59.176+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:59.176+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:59.176+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:15:59.519+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:15:59.519+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:15:59.519+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:00.081+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:00.082+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:00.082+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:00.541+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:00.541+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:00.542+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:01.140+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:01.141+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:01.141+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:01.577+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:01.577+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:01.577+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:02.139+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:02.139+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:02.139+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:02.418+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:02.418+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:02.419+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:03.165+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:03.165+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:03.165+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:03.475+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:03.475+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:03.476+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:04.224+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:04.225+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:04.225+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:04.550+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:04.550+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:04.550+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:05.173+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:05.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:05.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:05.410+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:05.411+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:05.411+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:06.090+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:06.091+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:06.091+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:06.450+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:06.450+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:06.450+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:07.113+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:07.113+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:07.113+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:07.316+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:07.316+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:07.317+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:07.967+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:07.968+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:07.968+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:08.293+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:08.294+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:08.294+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:08.919+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:08.919+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:08.919+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:09.306+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:09.306+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:09.307+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:09.930+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:09.930+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:09.930+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:10.350+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:10.351+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:10.351+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:10.936+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:10.937+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:10.937+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:11.360+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:11.360+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:11.360+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:11.991+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:11.993+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:11.993+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:12.363+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:12.363+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:12.363+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:12.880+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:12.880+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:12.880+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:13.365+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:13.365+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:13.366+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:13.927+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:13.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:13.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:14.409+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:14.409+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:14.409+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:14.952+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:14.953+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:14.953+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:15.308+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:15.309+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:15.309+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:15.963+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:15.964+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:15.964+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:16.321+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:16.321+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:16.322+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:16.926+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:16.926+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:16.927+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:17.335+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:17.336+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:17.337+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:17.929+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:17.929+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:17.929+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:18.384+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:18.384+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:18.384+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:18.930+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:18.931+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:18.931+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:19.426+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:19.426+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:19.426+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:19.797+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:19.797+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:19.797+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:20.467+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:20.467+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:20.468+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:20.843+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:20.843+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:20.843+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:21.434+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:21.434+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:21.434+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:21.729+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:21.729+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:21.729+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:22.475+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:22.475+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:22.475+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:22.786+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:22.786+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:22.786+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:23.517+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:23.518+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:23.518+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:23.701+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:23.701+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:23.701+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:24.368+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:24.368+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:24.368+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:24.745+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:24.746+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:24.746+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:25.333+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:25.333+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:25.333+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:25.784+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:25.784+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:25.784+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:26.190+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:26.191+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:26.191+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:26.794+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:26.794+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:26.794+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:27.244+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:27.244+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:27.244+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:27.694+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:27.694+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:27.694+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:28.162+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:28.162+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:28.162+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:28.737+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:28.738+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:28.738+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:29.143+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:29.144+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:29.144+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:29.750+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:29.750+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:29.750+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:30.173+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:30.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:30.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:30.655+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:30.656+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:30.656+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:31.173+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:31.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:31.173+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:31.714+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:31.714+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:31.714+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:32.194+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:32.194+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:32.194+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:32.722+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:32.723+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:32.723+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:33.170+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:33.170+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:33.170+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:33.560+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:33.560+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:33.560+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:34.231+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:34.231+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:34.231+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:34.452+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:34.452+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:34.452+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:35.101+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:35.101+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:35.101+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:35.443+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:35.443+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:35.443+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:36.152+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:36.152+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:36.152+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:36.466+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:36.466+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:36.466+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:37.165+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:37.165+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:37.165+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:37.493+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:37.493+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:37.493+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:38.159+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:38.159+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:38.159+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:38.503+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:38.503+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:38.503+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:39.035+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:39.036+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:39.036+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:39.517+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:39.518+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:39.518+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:40.012+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:40.012+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:40.012+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:40.435+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:40.436+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:40.436+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:40.995+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:40.995+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:40.995+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:41.274+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:41.274+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:41.274+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:42.054+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:42.054+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:42.054+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:42.241+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:42.241+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:42.241+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:43.035+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:43.038+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:43.038+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:43.252+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:43.252+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:43.252+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:44.047+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:44.047+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:44.047+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:44.081+05:30  INFO 15840 --- [Jasdaq] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-17T23:16:44.081+05:30  INFO 15840 --- [Jasdaq] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-17T23:16:44.081+05:30  INFO 15840 --- [Jasdaq] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-03-17T23:16:44.100+05:30 ERROR 15840 --- [Jasdaq] [nio-8080-exec-1] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.IllegalArgumentException: When allowCredentials is true, allowedOrigins cannot contain the special value "*" since that cannot be set on the "Access-Control-Allow-Origin" response header. To allow credentials to a set of origins, list them explicitly or consider using "allowedOriginPatterns" instead.] with root cause
+
+java.lang.IllegalArgumentException: When allowCredentials is true, allowedOrigins cannot contain the special value "*" since that cannot be set on the "Access-Control-Allow-Origin" response header. To allow credentials to a set of origins, list them explicitly or consider using "allowedOriginPatterns" instead.
+	at org.springframework.web.cors.CorsConfiguration.validateAllowCredentials(CorsConfiguration.java:568) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(AbstractHandlerMapping.java:544) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.DispatcherServlet.getHandler(DispatcherServlet.java:1284) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1065) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.44.jar:6.0]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.2.10.jar:6.2.10]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.44.jar:6.0]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.10.jar:6.2.10]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:116) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:398) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1769) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+
+2026-03-17T23:16:44.181+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:44.181+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:44.181+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:45.052+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:45.052+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:45.052+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:45.207+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:45.207+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:45.207+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:46.090+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:46.090+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:46.092+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:46.092+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:46.093+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:46.093+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:47.102+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:47.102+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:47.102+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:47.131+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:47.131+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:47.131+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:48.063+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:48.064+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:48.064+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:48.139+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:48.140+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:48.140+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:49.091+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:49.091+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:49.091+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:49.137+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:49.137+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:49.138+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:50.040+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:50.040+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:50.040+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:50.133+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:50.133+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:50.133+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:50.201+05:30  INFO 15840 --- [Jasdaq] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-03-17T23:16:51.069+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:51.069+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:51.069+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:51.101+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:51.101+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:51.101+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:51.943+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:51.943+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:51.943+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:52.124+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:52.124+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:52.124+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:52.966+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:52.966+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:52.966+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:53.153+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:53.153+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:53.153+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:53.981+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:53.981+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:53.981+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:54.183+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:54.183+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:54.183+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:54.994+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:54.996+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:54.996+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:55.197+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:55.197+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:55.197+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:56.001+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:56.001+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:56.001+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:56.218+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:56.219+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:56.219+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:57.029+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:57.029+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:57.029+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:57.139+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:57.139+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:57.139+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:57.964+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:57.964+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:57.964+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:58.073+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:58.073+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:58.073+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:58.928+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:58.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:58.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:58.993+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:58.993+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:58.993+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:59.906+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:59.906+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:59.906+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:16:59.999+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:16:59.999+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:16:59.999+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:00.790+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:00.791+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:00.791+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:01.008+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:01.008+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:01.008+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:01.601+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:01.601+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:01.601+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:01.928+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:01.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:01.928+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:02.603+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:02.603+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:02.603+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:02.942+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:02.942+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:02.942+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:03.608+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:03.608+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:03.608+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:03.918+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:03.918+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:03.918+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:04.647+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:04.647+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:04.647+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:04.930+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:04.931+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:04.932+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:05.631+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:05.631+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:05.632+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:05.941+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:05.941+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:05.941+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:06.636+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:06.636+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:06.636+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:06.852+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:06.852+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:06.852+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:07.696+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:07.696+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:07.696+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:07.850+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:07.850+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:07.850+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:08.720+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:08.720+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:08.720+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:08.857+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:08.857+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:08.857+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:09.637+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:09.637+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:09.637+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:09.873+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:09.874+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:09.874+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:10.678+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:10.679+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:10.679+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:10.882+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:10.882+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:10.882+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:11.696+05:30  INFO 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:11.696+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:11.696+05:30  WARN 15840 --- [Jasdaq] [ntainer#0-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-1, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected
+2026-03-17T23:17:11.945+05:30  INFO 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Node -1 disconnected.
+2026-03-17T23:17:11.946+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2026-03-17T23:17:11.946+05:30  WARN 15840 --- [Jasdaq] [ntainer#1-0-C-1] org.apache.kafka.clients.NetworkClient   : [Consumer clientId=consumer-my-group-2, groupId=my-group] Bootstrap broker localhost:9092 (id: -1 rack: null) disconnected

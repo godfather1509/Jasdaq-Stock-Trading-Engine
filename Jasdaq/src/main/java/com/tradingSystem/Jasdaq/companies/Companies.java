@@ -1,5 +1,6 @@
 package com.tradingSystem.Jasdaq.companies;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -9,8 +10,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import jakarta.persistence.Id;
 
 import com.tradingSystem.Jasdaq.Engine.Order;
@@ -18,7 +20,8 @@ import com.tradingSystem.Jasdaq.Engine.Trade;
 
 @Entity
 @Table(name = "Companies")
-@Data // this reduces boilerplate code and gives statndard functions for all fields
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -34,10 +37,11 @@ public class Companies {
     private long currentPrice;
     private int shares;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Order> orders;
-    // orphanRemoval true means if we remove an order from orders list then it will be removed from Order talble as well
     
+    @JsonManagedReference
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Trade> tradeIds;
 
@@ -47,5 +51,16 @@ public class Companies {
         this.name=name;
         this.currentPrice=currentPrice;
         this.shares=shares;
-    }       
+    }
+
+    @Override
+    public String toString() {
+        return "Companies{" +
+                "companyId='" + companyId + '\'' +
+                ", symbol='" + symbol + '\'' +
+                ", name='" + name + '\'' +
+                ", currentPrice=" + currentPrice +
+                ", shares=" + shares +
+                '}';
+    }
 }

@@ -40,7 +40,14 @@ public class CompanyService {
     }
 
     public List<Companies> allCompanies() {
-        return companyRepository.findAll();
+        try {
+            List<Companies> result = companyRepository.findAll();
+            System.out.println("Returning " + result.size() + " companies.");
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public Optional<Companies> singleCompany(String id) {
@@ -66,6 +73,7 @@ public class CompanyService {
         if(optionalCompany.isPresent()){
             Companies company=optionalCompany.get();
             company.setCurrentPrice(price);
+            companyRepository.save(company);
         }
         else{
             System.out.println("Company not found");

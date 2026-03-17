@@ -4,6 +4,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.tradingSystem.Jasdaq.companies.Companies;
 
 import jakarta.persistence.Column;
@@ -11,11 +12,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "Orders")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Order {
 
@@ -46,16 +50,17 @@ public class Order {
     public long eventTime;
     public long finalPrice;
 
-    @Transient // this prevents field to be formed in db it just remains in ram
+    @Transient
+    @JsonIgnore
     public Order nextOrder;
 
     @Transient
+    @JsonIgnore
     public Order prevOrder;
-    // we only need these for linked list not for storage
 
     @ManyToOne
     @JoinColumn(name = "companyId", nullable = true)
-    @JsonIgnore
+    @JsonBackReference
     private Companies company;
 
 
@@ -64,7 +69,7 @@ public class Order {
         this.symbol=symbol;
         this.buySell = buySell;
         this.marketLimit = marketLimit;
-        this.status = false; // by default all orders are set as pending
+        this.status = false;
         this.shares = shares;
         this.price = price;
         this.entryTime = entryTime;
@@ -73,7 +78,17 @@ public class Order {
         this.finalPrice = 0;
     }
 
-    public String toString(){
-        return orderId+" "+symbol+" "+buySell+" "+marketLimit+" "+status+" "+shares+" "+price+" "+entryTime+" "+finalPrice+" "+company.toString();
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderId='" + orderId + '\'' +
+                ", symbol='" + symbol + '\'' +
+                ", buySell=" + buySell +
+                ", marketLimit=" + marketLimit +
+                ", status=" + status +
+                ", shares=" + shares +
+                ", price=" + price +
+                ", entryTime=" + entryTime +
+                '}';
     }
 }

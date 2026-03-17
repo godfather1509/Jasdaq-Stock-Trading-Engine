@@ -77,10 +77,18 @@ public class EngineService {
                 saveToRedis(order, list);
                 saveToKafka(order, list);
 
-                wsTemplate.convertAndSendToUser(order.orderId, "queue/orders", order);
+                wsTemplate.convertAndSendToUser(order.orderId, "/queue/orders", order);
 
                 String marketUpdate = buildBroadcastMessage(companyId, order);
                 multicast.broadcastAsync(marketUpdate);
+                
+                // Add public STOMP broadcast for browser UI updates
+                Map<String, Object> update = Map.of(
+                    "companyId", companyId,
+                    "price", order.getPrice(),
+                    "timestamp", System.currentTimeMillis()
+                );
+                wsTemplate.convertAndSend("/topic/market-updates", update);
             }
         });
     }

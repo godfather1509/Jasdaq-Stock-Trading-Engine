@@ -93,57 +93,36 @@ public class MatchingEngine {
 
     public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares) {
         if (!orderMap.containsKey(orderId)) {
+            list.clear(); // FIX: Clear trades from previous operations
             long entryTime = System.currentTimeMillis(); // get time when order is placed
             order = new Order(orderId, symbol, buySell, price, shares, entryTime, marketLimit);
             if (marketLimit) {
                 // if it is a market order
                 Order order1 = executeMarketOrder(order);
                 if (order1 == null) {
-                    // System.out.println("Cannot Execute order");
                     return null;
                 } else {
-                    // System.out.println("Order Executed");
-                    // System.out.println(order1.toString());
-                    return new TradeResults(list, order1);
+                    return new TradeResults(new LinkedList<>(list), order1);
                 }
-                // market order is order that executes immediately at best available price
             } else {
-                /*
-                 * if it is a limit order
-                 * limit order is order that holds till asked price is available
-                 * market order do not go in order map as they are exceuted instantaneously
-                 */
-                boolean executed = false;
                 OrderWrapper wrap;
                 if (buySell) {
                     // buy order
                     wrap = executeLimitOrder(order, sellTree, totalSellShares); // try executing incoming order first
-                    order = wrap.getOrder();
                     totalSellShares = wrap.getShares();
-                    executed = wrap.getExecuted();
-                    // this will sell shares
                 } else {
                     // sell order
                     wrap = executeLimitOrder(order, buyTree, totalBuyShares);
-                    order = wrap.getOrder();
                     totalBuyShares = wrap.getShares();
-                    executed = wrap.getExecuted();
-                    // this will buy shares
                 }
-                /*
-                 * once order is placed we check if it is matching with any of the current
-                 * orders if yes it is executed
-                 * else place it in book
-                 */
-                if (executed) {
-                    // System.out.println("Order Executed");
-                    return new TradeResults(list, order);
+                order = wrap.getOrder();
+                
+                if (order.shares > 0) {
+                    order = placeOrder(order); // place remaining shares in book
                 } else {
-                    // if order does not execute
-                    order = placeOrder(order); // this will add order in book
-                    return new TradeResults(list, order);
-                    // System.out.println("Order Placed");
+                    order.status = true;
                 }
+                return new TradeResults(new LinkedList<>(list), order);
             }
         } else {
             System.out.println("Order with orderId " + orderId + " already exists");
@@ -203,24 +182,14 @@ public class MatchingEngine {
         if (limit != null) {
             if ((isBuy) ? incomingOrder.getPrice() >= limit.getPrice() : incomingOrder.getPrice() <= limit.getPrice()) {
                 // if incoming orders price matches previous orders in the book
-                OrderWrapper result = executeOrder(incomingOrder, tree, totalShares);
-                if (result.getOrder() == null)
-                    return new OrderWrapper(incomingOrder, false, totalShares);
-                if (result.getOrder().shares == 0) {
-                    return new OrderWrapper(incomingOrder, false, totalShares);
-                } else {
-                    totalShares = result.getShares();
-                    return new OrderWrapper(result.getOrder(), true, totalShares);
-                }
+                return executeOrder(incomingOrder, tree, totalShares);
             } else {
                 // when prices does not match
-                // System.out.println(incomingOrder.orderId + " Order did not match");
-                return new OrderWrapper(incomingOrder, false, totalShares);
+                return new OrderWrapper(incomingOrder, totalShares);
             }
         } else {
             // book is empty
-            // System.out.println("Empty tree");
-            return new OrderWrapper(incomingOrder, false, totalShares);
+            return new OrderWrapper(incomingOrder, totalShares);
         }
     }
 
@@ -233,6 +202,7 @@ public class MatchingEngine {
             System.out.println(order.toString() + " is already executed");
             return null;
         }
+        list.clear(); // FIX: Clear trades
         OrderWrapper wrap;
         if (order.buySell) {
             if (sellTree.isEmpty()) {
@@ -242,7 +212,7 @@ public class MatchingEngine {
                 // Buy market: match against sell side until empty or filled
                 wrap = executeOrder(order, sellTree, totalSellShares);
                 totalSellShares = wrap.getShares();
-                return wrap.getOrder(); // remainder (if any) is zero for IOC
+                return wrap.getOrder();
             }
         } else {
             // Sell market: match against buy side
@@ -255,8 +225,6 @@ public class MatchingEngine {
                 return wrap.getOrder();
             }
         }
-        // if a market order is cannot be executed fully then it is converted to limit
-        // order with remaining no. of shares
     }
 
     private OrderWrapper executeOrder(Order incomingOrder, LimitsRBTree tree, long totalShares) {
@@ -264,95 +232,64 @@ public class MatchingEngine {
         int remainingShares = incomingOrder.shares;
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
         boolean isBuy = incomingOrder.buySell;
+        long lastMatchedPrice = 0;
+
         while (remainingShares > 0 && limit != null) {
 
             if (!marketLimit) {
                 // if limit order
                 if (isBuy && incomingOrder.getPrice() < limit.getPrice()) {
-                    // its limit buy order purchase should not be greater than given amount
                     break;
                 } else if (!isBuy && incomingOrder.getPrice() > limit.getPrice()) {
-                    // its limit sell order sale should not be less than given amount
                     break;
                 }
             }
             Order order = limit.getHead();
-            // get oldest order first
             if (order == null) {
-                // limit is empty
                 tree.delete(limit);
                 limit = tree.bestPrice();
                 continue;
             }
-            if (order.shares == remainingShares) {
-                // shares of resting order and incoming order are equal
-                remainingShares = 0;
-                limit.pop(); // remove the 1st order from list
-                limit.limitVolume -= order.shares;
-                if (isBuy) {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
-                            order.getPrice(), order.shares, symbol);
-                    list.add(trade);
-                } else {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
-                            order.getPrice(), order.shares, symbol);
-                    list.add(trade);
-                }
+            
+            lastMatchedPrice = order.getPrice();
+            int matchQuantity = Math.min(remainingShares, order.shares);
+            
+            trade = new Trade(IdGenerator.nextID(symbol, 't'), 
+                             isBuy ? incomingOrder.orderId : order.orderId, 
+                             isBuy ? order.orderId : incomingOrder.orderId,
+                             order.getPrice(), matchQuantity, symbol);
+            list.add(trade);
 
-                orderMap.remove(order.orderId); // remove the order from map
-                order.status = true; // order is fulfilled/ executed
-                order.eventTime = System.currentTimeMillis();
-                totalShares -= order.shares; // update total available shares to sell
-                if (limit.isEmpty()) {
-                    // remove limit from tree if its empty
-                    tree.delete(limit);
-                }
-                break;
-            }
-            if (order.shares < remainingShares) {
-                // shares of incoming order are more
-                remainingShares -= order.shares;
-                order.eventTime = System.currentTimeMillis();
-                order.status = true;
-                if (isBuy) {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
-                            order.getPrice(), order.shares, symbol);
-                    list.add(trade);
-                } else {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
-                            order.getPrice(), order.shares, symbol);
-                    list.add(trade);
-                }
+            if (order.shares == matchQuantity) {
                 limit.pop();
-                limit.limitVolume -= order.shares;
-                totalShares -= order.shares;
+                orderMap.remove(order.orderId);
+                order.status = true;
+                order.eventTime = System.currentTimeMillis();
+                totalShares -= matchQuantity;
                 if (limit.isEmpty()) {
-                    // remove limit from tree if its empty
                     tree.delete(limit);
                 }
             } else {
-                // shares of resting order are more
-                if (isBuy) {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), incomingOrder.orderId, order.orderId,
-                            order.getPrice(), remainingShares, symbol);
-                    list.add(trade);
-                } else {
-                    trade = new Trade(IdGenerator.nextID(symbol, 't'), order.orderId, incomingOrder.orderId,
-                            order.getPrice(), remainingShares, symbol);
-                    list.add(trade);
-                }
-                order.shares -= remainingShares;
-                totalShares -= remainingShares;
-                limit.limitVolume -= remainingShares;
-                remainingShares = 0;
+                order.shares -= matchQuantity;
+                totalShares -= matchQuantity;
+                limit.limitVolume -= matchQuantity;
             }
+            
+            remainingShares -= matchQuantity;
             limit = tree.bestPrice();
         }
+        
         incomingOrder.shares = remainingShares;
-        incomingOrder.finalPrice = order.getPrice(); // update final price
-        incomingOrder.status = true; // trade is executed
-        incomingOrder.eventTime = System.currentTimeMillis();
-        currentPrice = order.getPrice(); // update current price of share
+        if (lastMatchedPrice != 0) {
+            incomingOrder.finalPrice = lastMatchedPrice;
+            incomingOrder.eventTime = System.currentTimeMillis();
+            currentPrice = lastMatchedPrice; 
+        }
+        
+        if (remainingShares == 0) {
+            incomingOrder.status = true;
+        }
+
         return new OrderWrapper(incomingOrder, totalShares);
     }
 
@@ -438,17 +375,10 @@ public class MatchingEngine {
 
         Order order;
         long totalShares;
-        boolean executed;
 
         public OrderWrapper(Order order, long totalShares) {
             this.totalShares = totalShares;
             this.order = order;
-        }
-
-        public OrderWrapper(Order order, boolean executed, long totalShares) {
-            this.order = order;
-            this.executed = executed;
-            this.totalShares = totalShares;
         }
 
         public Order getOrder() {
@@ -457,10 +387,6 @@ public class MatchingEngine {
 
         public long getShares() {
             return totalShares;
-        }
-
-        public boolean getExecuted() {
-            return executed;
         }
     }
 
