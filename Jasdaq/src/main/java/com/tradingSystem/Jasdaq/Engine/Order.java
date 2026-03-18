@@ -39,6 +39,9 @@ public class Order {
     public int shares;
 
     @Column(nullable = false)
+    public int initialShares;
+
+    @Column(nullable = false)
     public long price;
 
     @Column(nullable = false, updatable = false)
@@ -71,6 +74,7 @@ public class Order {
         this.marketLimit = marketLimit;
         this.status = false;
         this.shares = shares;
+        this.initialShares = shares;
         this.price = price;
         this.entryTime = entryTime;
         this.nextOrder = null;

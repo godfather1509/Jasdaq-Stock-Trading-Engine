@@ -397,7 +397,21 @@ function CompanyPage() {
                                                 {order.buySell ? "BUY" : "SELL"}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-semibold">{order.shares}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex flex-col items-end">
+                                                <span className="font-bold text-gray-900">
+                                                    {order.initialShares ? (
+                                                        <>
+                                                            {order.initialShares - order.shares}
+                                                            <span className="text-gray-400 font-normal mx-1">/</span>
+                                                            {order.initialShares}
+                                                        </>
+                                                    ) : (
+                                                        order.shares > 0 ? order.shares : <span className="text-gray-400 font-normal italic">--</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4 text-right font-mono text-indigo-600">
                                             {order.finalPrice ? `$${order.finalPrice.toLocaleString()}` : order.price ? `$${order.price.toLocaleString()}` : "-"}
                                         </td>
