@@ -11,7 +11,7 @@ public class TradeEngine{
 
     BlockingQueue<Request> SingleThreadQueue = new LinkedBlockingQueue<>();
     // this is multithreded queue can prevent data corruption on multithreded read and write
-    enum Type{addRequest, cancelRequest, priceRequest, shutDown};
+    enum Type{addRequest, cancelRequest, priceRequest, metricsRequest, shutDown};
     private volatile boolean running;
     private final Thread worker; // decalre a thread
     String symbol;
@@ -85,6 +85,12 @@ public class TradeEngine{
         SingleThreadQueue.add(req);
         return req.future;
     }
+
+    public CompletableFuture<Object> submitMetricsRequest(){
+        Request req=new Request(Type.metricsRequest);
+        SingleThreadQueue.add(req);
+        return req.future;
+    }
     // these are functions are called from outside the class to add requests to Blocking queue
 
     public CompletableFuture<Object> submitShutDown(){
@@ -114,6 +120,9 @@ public class TradeEngine{
                         case priceRequest:
                             lob.getCurrentPrice();
                             req.future.complete("Order Book");
+                            break;
+                        case metricsRequest:
+                            req.future.complete(lob.getMetrics());
                             break;
                         case shutDown:
                             running=false;

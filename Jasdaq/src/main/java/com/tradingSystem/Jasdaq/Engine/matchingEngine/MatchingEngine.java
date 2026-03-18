@@ -81,14 +81,28 @@ public class MatchingEngine {
     }
 
     public record TradeResults(List<Trade> list,Order order) {
-        // java records is a class with certain common functions pre-implemented
-        /*
-         * Getters
-         * Constructors
-         * equals etc.
-         * all above boilerplate functions come pre implemented in records
-         * Records are immutable, so you cannot change queue or order after creation
-         */
+    }
+
+    public record MarketMetrics(
+        long totalBuyShares,
+        long totalSellShares,
+        long buyLimitOrders,
+        long sellLimitOrders,
+        long buyMarketOrders,
+        long sellMarketOrders,
+        long currentPrice
+    ) {}
+
+    public MarketMetrics getMetrics() {
+        long bl = 0, sl = 0, bm = 0, sm = 0;
+        for (Order o : orderMap.values()) {
+            if (o.buySell) {
+                if (o.marketLimit) bm++; else bl++;
+            } else {
+                if (o.marketLimit) sm++; else sl++;
+            }
+        }
+        return new MarketMetrics(totalBuyShares, totalSellShares, bl, sl, bm, sm, currentPrice);
     }
 
     public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares) {

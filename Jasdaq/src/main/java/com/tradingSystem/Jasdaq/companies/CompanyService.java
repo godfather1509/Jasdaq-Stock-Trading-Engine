@@ -54,6 +54,10 @@ public class CompanyService {
         return companyRepository.findById(id);
     }
 
+    public Companies getCompanyById(String companyId) {
+        return companyRepository.findById(companyId).orElse(null);
+    }
+
     public Companies createCompany(Companies company) {
         engineMap.put(company.getCompanyId(), new TradeEngine(company.getSymbol(), company.getCompanyId())); 
         // initialize new trade engine for new company

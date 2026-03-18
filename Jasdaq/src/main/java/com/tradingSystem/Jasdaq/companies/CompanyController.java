@@ -18,6 +18,9 @@ public class CompanyController {
     @Autowired
     private CompanyService companyService;
 
+    @Autowired
+    private com.tradingSystem.Jasdaq.Engine.EngineService engineService;
+
     @GetMapping("/allCompanies")
     public ResponseEntity<List<Companies>> getAllCompanies()
     {
@@ -29,5 +32,14 @@ public class CompanyController {
         return companyService.singleCompany(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/metrics")
+    public java.util.concurrent.CompletableFuture<ResponseEntity<Object>> getMetrics(@PathVariable String id) {
+        return engineService.getMarketMetrics(id)
+            .thenApply(metrics -> {
+                if (metrics == null) return ResponseEntity.notFound().build();
+                return ResponseEntity.ok(metrics);
+            });
     }
 }
