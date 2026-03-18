@@ -82,6 +82,30 @@ python manage.py runserver 8000
 
 ---
 
+### 4. Stopping Services
+
+To stop the running services, you can usually use `Ctrl + C` in the respective terminal windows. For a more explicit shutdown:
+
+#### Applications (Spring Boot, React, Django)
+- Press `Ctrl + C` in each terminal window to stop the process.
+
+#### Redis
+```bash
+redis-cli shutdown
+```
+
+#### Kafka & Zookeeper
+Navigate to the Kafka directory:
+```bash
+# Stop Kafka Broker
+bin/kafka-server-stop.sh
+
+# Stop Zookeeper
+bin/zookeeper-server-stop.sh
+```
+
+---
+
 ## API Documentation
 
 ### REST API (Spring Boot)
@@ -113,17 +137,3 @@ Endpoint: `ws://localhost:8080/ws`
 | **Companies** | `company_id`, `name`, `symbol`, `current_price` |
 | **Orders** | `order_id`, `company_id`, `shares`, `price`, `status`, `market_limit` |
 | **Trades** | `trade_id`, `buyer_id`, `seller_id`, `execution_price`, `quantity` |
-
----
-
-## Key Components
-
-### The Matching Engine (`MatchingEngine.java`)
-The core logic resides in a single-threaded event loop to prevent race conditions during order matching. It maintains two Red-Black Trees for Buy/Sell limit orders to ensure $O(1)$ best-price retrieval.
-
-### Order Rejection Logic
-- **Silent Rejection**: Caught by a 4-second timeout on the frontend.
-- **Active Rejection**: Broadcasted via `/topic/order-rejected` if the engine is uninitialized or liquidity is missing for market orders.
-
-### Real-Time Dashboard
-The frontend polls `/metrics` every 3 seconds and subscribes to market topics to provide low-latency visual feedback of the "Bid" and "Ask" volumes.
