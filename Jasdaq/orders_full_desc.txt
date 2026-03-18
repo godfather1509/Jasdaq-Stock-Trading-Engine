@@ -1,0 +1,13 @@
+﻿Field	Type	Null	Key	Default	Extra
+order_id	varchar(255)	NO	PRI	NULL	
+buy_sell	bit(1)	NO		NULL	
+entry_time	bigint	NO		NULL	
+event_time	bigint	NO		NULL	
+final_price	bigint	NO		NULL	
+market_limit	bit(1)	NO		NULL	
+price	bigint	NO		NULL	
+shares	int	NO		NULL	
+status	bit(1)	NO		NULL	
+symbol	varchar(255)	NO		NULL	
+company_id	varchar(255)	YES	MUL	NULL	
+initial_shares	int	NO		NULL	
