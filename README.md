@@ -42,12 +42,8 @@ redis-server
 
 #### Kafka
 Start Zookeeper and Kafka (Standard local setup):
-```bash
-# Start Zookeeper
-bin/zookeeper-server-start.sh config/zookeeper.properties
-
-# Start Kafka Broker
-bin/kafka-server-start.sh config/server.properties
+```bash 
+kafka-server-start.bat %KAFKA_HOME%\config\kraft\server.properties
 ```
 
 ---
@@ -79,32 +75,6 @@ pip install django mysqlclient
 python manage.py runserver 8000
 ```
 *Admin runs on: `http://localhost:8000`*
-
----
-
-### 4. Stopping Services
-
-To stop the running services, you can usually use `Ctrl + C` in the respective terminal windows. For a more explicit shutdown:
-
-#### Applications (Spring Boot, React, Django)
-- Press `Ctrl + C` in each terminal window to stop the process.
-
-#### Redis
-```bash
-redis-cli shutdown
-```
-
-#### Kafka & Zookeeper
-Navigate to the Kafka directory:
-```bash
-# Stop Kafka Broker
-bin/kafka-server-stop.sh
-
-# Stop Zookeeper
-bin/zookeeper-server-stop.sh
-```
-
----
 
 ## API Documentation
 
