@@ -49,6 +49,35 @@ class CompanyAdmin(admin.ModelAdmin):
     ordering      = ('symbol',)
     inlines       = [OrderInline, TradeInline]
 
+    def save_model(self, request, obj, form, change):
+        import uuid
+        import time
+        from .models import Order
+        
+        is_new = obj._state.adding
+        if is_new and not obj.company_id:
+            obj.company_id = str(uuid.uuid4())
+            
+        super().save_model(request, obj, form, change)
+        
+        if is_new:
+            # Create the initial SELL limit order with all the shares
+            order_id = str(uuid.uuid4())
+            curr_time = int(time.time() * 1000)
+            Order.objects.create(
+                order_id=order_id,
+                symbol=obj.symbol,
+                buy_sell=False,     # SELL
+                market_limit=False, # LIMIT
+                status=False,       # PENDING
+                shares=obj.shares,
+                price=obj.current_price,
+                entry_time=curr_time,
+                event_time=curr_time,
+                final_price=0,
+                company=obj
+            )
+
 
 # ─── Order ──────────────────────────────────────────────────────────────────
 @admin.register(Order)

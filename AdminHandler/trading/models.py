@@ -3,7 +3,7 @@ from django.db import models
 
 class Company(models.Model):
     """Maps to the 'companies' table created by Spring Boot / JPA."""
-    company_id = models.CharField(max_length=255, primary_key=True, db_column='company_id')
+    company_id = models.CharField(max_length=255, primary_key=True, db_column='company_id', blank=True)
     symbol     = models.CharField(max_length=255)
     name       = models.CharField(max_length=255)
     current_price = models.BigIntegerField(db_column='current_price', default=0)

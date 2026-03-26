@@ -7,9 +7,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -33,12 +31,6 @@ public class EngineService {
 
     @Autowired
     private TradeRepository tradeRepository;
-
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -102,13 +94,7 @@ public class EngineService {
                     }
                 }
 
-                // 3. Best-effort: Redis and Kafka (failures are non-fatal)
-                try { saveToRedis(order, list); } catch (Exception e) {
-                    System.err.println("[WARN] Redis save failed: " + e.getMessage());
-                }
-                try { saveToKafka(order, list); } catch (Exception e) {
-                    System.err.println("[WARN] Kafka send failed: " + e.getMessage());
-                }
+                // 3. Best-effort: Removed Redis and Kafka
 
                 // 4. Always send WebSocket confirmation to ALL subscribers (broadcast)
                 wsTemplate.convertAndSend("/topic/orders", order);
@@ -198,61 +184,6 @@ public class EngineService {
         } catch (Exception e) {
             e.printStackTrace();
             return companyId + "-" + order.finalPrice + order.eventTime;
-        }
-    }
-
-    private void saveToRedis(Order order, List<Trade> list) {
-        try {
-            String orderJson = objectMapper.writeValueAsString(order);
-            redisTemplate.opsForValue().set("order" + order.orderId, orderJson);
-            if (list != null) {
-                for (Trade t : list) {
-                    String tradeJson = objectMapper.writeValueAsString(t);
-                    redisTemplate.opsForValue().set("trade" + t.getTradeId(), tradeJson);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveToKafka(Order order, List<Trade> list) {
-        try {
-            String orderJson = objectMapper.writeValueAsString(order);
-            kafkaTemplate.send("orders-topic", order.orderId, orderJson);
-            if (list != null) {
-                for (Trade t : list) {
-                    String tradeJson = objectMapper.writeValueAsString(t);
-                    kafkaTemplate.send("trades-topic", t.getTradeId(), tradeJson);
-                }
-            }
-        } catch (Exception e) {
-            // Kafka is optional – DB persistence already happened
-            System.err.println("[WARN] Kafka send failed (non-fatal): " + e.getMessage());
-        }
-    }
-
-    @KafkaListener(topics = "orders-topic", groupId = "my-group")
-    public void kafkaOrderConsumer(String message) {
-        try {
-            Order order = objectMapper.readValue(message, Order.class);
-            Companies company = companyService.getCompanyBySymbol(order.getSymbol());
-            order.setCompany(company);
-            saveOrderToDatabaseAsync(order);
-        } catch (Exception e) {
-            System.out.println(">> Error in kafkaOrderConsumer:");
-            e.printStackTrace();
-        }
-    }
-
-    @KafkaListener(topics = "trades-topic", groupId = "my-group")
-    public void kafkaTradeConsumer(String message) {
-        try {
-            Trade trade = objectMapper.readValue(message, Trade.class);
-            saveTradeToDatabase(trade);
-        } catch (Exception e) {
-            System.out.println(">> Error in kafkaTradeConsumer:");
-            e.printStackTrace();
         }
     }
 
