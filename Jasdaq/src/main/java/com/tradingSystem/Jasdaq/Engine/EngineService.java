@@ -8,7 +8,6 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -49,17 +48,22 @@ public class EngineService {
 
     public void placeOrder(boolean buySell, long price, int shares, boolean marketLimit, String companyId) {
 
+        // Share reservation logic removed: shares are enforced by an initial IPO SELL order.
+
         TradeEngine engine = companyService.getTradeEngine(companyId);
         if (engine == null) {
+            // Release reservation removed
             System.err.println("[ERROR] No TradeEngine found for companyId=" + companyId);
             broadcastRejection(companyId, null, "Trading engine not initialized for this company. Please restart the server.");
             return;
         }
+
         CompletableFuture<Object> obj = engine.submitAddRequest(buySell, price, shares, marketLimit);
 
         obj.whenComplete((result, throwables) -> {
             if (throwables != null) {
                 throwables.printStackTrace();
+                // Release reservation removed
                 broadcastRejection(companyId, null, "Internal engine error: " + throwables.getMessage());
                 return;
             }
@@ -74,6 +78,7 @@ public class EngineService {
                     String reason = side + " market order rejected: no " + opposite
                             + " orders available in the book to match against. Try placing a LIMIT order instead.";
                     System.err.println("[WARN] " + reason);
+                    // Release reservation removed
                     broadcastRejection(companyId, null, reason);
                     return;
                 }
@@ -82,7 +87,7 @@ public class EngineService {
                 long executedPrice = order.getFinalPrice() > 0 ? order.getFinalPrice() : order.getPrice();
                 companyService.setCurrentPrice(executedPrice, companyId);
 
-                // 2. Persist order + trades directly to DB (primary path – no Kafka dependency)
+                // 2. Persist order + trades directly to DB
                 Companies company = companyService.getCompanyById(companyId);
                 order.setCompany(company);
                 saveOrderToDatabaseAsync(order);
@@ -94,12 +99,10 @@ public class EngineService {
                     }
                 }
 
-                // 3. Best-effort: Removed Redis and Kafka
-
-                // 4. Always send WebSocket confirmation to ALL subscribers (broadcast)
+                // 3. Send WebSocket confirmation to ALL subscribers
                 wsTemplate.convertAndSend("/topic/orders", order);
 
-                // 5. Broadcast market price update
+                // 4. Broadcast market price update
                 Map<String, Object> update = Map.of(
                     "companyId", companyId,
                     "price", executedPrice,
@@ -107,7 +110,7 @@ public class EngineService {
                 );
                 wsTemplate.convertAndSend("/topic/market-updates", update);
 
-                // 6. Best-effort multicast broadcast
+                // 5. Best-effort multicast broadcast
                 try {
                     String marketUpdate = buildBroadcastMessage(companyId, order);
                     multicast.broadcastAsync(marketUpdate);
@@ -134,6 +137,7 @@ public class EngineService {
             }
             if (result instanceof Order order) {
                 wsTemplate.convertAndSend("/topic/orders", order);
+                // Release shares logic removed
                 deleteFromDatabaseAsync(order);
             }
         });
@@ -185,10 +189,6 @@ public class EngineService {
             e.printStackTrace();
             return companyId + "-" + order.finalPrice + order.eventTime;
         }
-    }
-
-    private void sendUserWsError(String objectId, String message) {
-        wsTemplate.convertAndSendToUser(objectId, "/queue/orders", Map.of("error:", message));
     }
 
     /**

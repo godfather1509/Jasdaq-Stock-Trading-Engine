@@ -8,9 +8,6 @@ JASDAQ is a high-performance, real-time stock trading engine and dashboard. It f
 - **Backend**: Spring Boot (Java, Maven, WebSockets, JPA)
 - **Admin**: Django (Python, MySQL Connector)
 - **Database**: MySQL (Primary storage)
-- **Middleware**: 
-  - **Redis**: Real-time caching and broadcast support
-  - **Kafka**: Asynchronous event streaming and message persistence
 
 ---
 
@@ -22,8 +19,6 @@ Ensure you have the following installed:
 - **Node.js & npm**
 - **Python 3.10+**
 - **MySQL Server**
-- **Redis Server**
-- **Apache Kafka**
 
 ### 2. Infrastructure Setup (Databases & Messaging)
 
@@ -34,17 +29,7 @@ CREATE DATABASE jasdaqdb;
 ```
 *User/Password defaults: `root` / `root`*
 
-#### Redis
-Start the Redis server:
-```bash
-redis-server
-```
 
-#### Kafka
-Start Zookeeper and Kafka (Standard local setup):
-```bash 
-kafka-server-start.bat %KAFKA_HOME%\config\kraft\server.properties
-```
 
 ---
 
@@ -74,7 +59,10 @@ cd AdminHandler
 pip install django mysqlclient
 python manage.py runserver 8000
 ```
-*Admin runs on: `http://localhost:8000`*
+*Admin runs on: `http://localhost:8000/admin`*
+
+*Admin Username: `ayush`*
+*Admin Password: `12345`*
 
 ## API Documentation
 

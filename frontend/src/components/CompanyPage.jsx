@@ -364,10 +364,96 @@ function CompanyPage() {
                 </div>
             </div>
 
+            {/* ── ORDER BOOK ── */}
             <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
                 <div className="flex justify-between items-center mb-6 px-2">
-                    <h2 className="text-2xl font-bold text-indigo-900">Your Orders</h2>
-                    <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{o.length} Active</span>
+                    <h2 className="text-2xl font-bold text-indigo-900">Order Book</h2>
+                    <span className="text-xs text-gray-400 italic">Live market depth — click a row to pre-fill the order form</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    {/* ASKS (SELL offers — available to buy) */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                            <h3 className="text-sm font-bold text-red-600 uppercase tracking-wider">Asks (Sell Orders)</h3>
+                        </div>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                    <th className="py-2 pr-4">Price</th>
+                                    <th className="py-2 pr-4 text-right">Shares</th>
+                                    <th className="py-2 text-center">Buy</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0)
+                                  .sort((a, b) => a.price - b.price)
+                                  .map((ord, idx) => (
+                                    <tr key={idx} className="hover:bg-red-50 transition-colors cursor-pointer group"
+                                        onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                        <td className="py-3 pr-4 font-mono font-bold text-red-600">
+                                            ${ord.price.toLocaleString()}
+                                        </td>
+                                        <td className="py-3 pr-4 text-right font-semibold text-gray-700">
+                                            {ord.shares.toLocaleString()}
+                                        </td>
+                                        <td className="py-3 text-center">
+                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full">BUY</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0).length === 0 && (
+                                    <tr><td colSpan="3" className="py-8 text-center text-gray-300 italic text-xs">No sell orders</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* BIDS (BUY offers) */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            <h3 className="text-sm font-bold text-green-600 uppercase tracking-wider">Bids (Buy Orders)</h3>
+                        </div>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                    <th className="py-2 pr-4">Price</th>
+                                    <th className="py-2 pr-4 text-right">Shares</th>
+                                    <th className="py-2 text-center">Sell</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0)
+                                  .sort((a, b) => b.price - a.price)
+                                  .map((ord, idx) => (
+                                    <tr key={idx} className="hover:bg-green-50 transition-colors cursor-pointer group"
+                                        onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                        <td className="py-3 pr-4 font-mono font-bold text-green-600">
+                                            ${ord.price.toLocaleString()}
+                                        </td>
+                                        <td className="py-3 pr-4 text-right font-semibold text-gray-700">
+                                            {ord.shares.toLocaleString()}
+                                        </td>
+                                        <td className="py-3 text-center">
+                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full">SELL</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0).length === 0 && (
+                                    <tr><td colSpan="3" className="py-8 text-center text-gray-300 italic text-xs">No buy orders</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── ALL ORDERS HISTORY ── */}
+            <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
+                <div className="flex justify-between items-center mb-6 px-2">
+                    <h2 className="text-2xl font-bold text-indigo-900">Order History</h2>
+                    <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{o.length} Orders</span>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -417,7 +503,7 @@ function CompanyPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${order.status ? 'bg-green-500' : 'bg-yellow-500 anima-pulse'}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ${order.status ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                                                 <span className={`text-sm font-medium ${order.status ? 'text-green-700' : 'text-yellow-700'}`}>
                                                     {order.status === true ? "Executed" : "Pending"}
                                                 </span>
@@ -438,7 +524,7 @@ function CompanyPage() {
                             ) : (
                                 <tr>
                                     <td colSpan="7" className="text-center py-12 text-gray-400 italic">
-                                        Your order book is empty
+                                        No orders yet
                                     </td>
                                 </tr>
                             )}

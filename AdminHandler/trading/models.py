@@ -2,16 +2,22 @@ from django.db import models
 
 
 class Company(models.Model):
-    """Maps to the 'companies' table created by Spring Boot / JPA."""
-    company_id = models.CharField(max_length=255, primary_key=True, db_column='company_id', blank=True)
-    symbol     = models.CharField(max_length=255)
-    name       = models.CharField(max_length=255)
-    current_price = models.BigIntegerField(db_column='current_price', default=0)
-    shares     = models.IntegerField(default=0)
+    """Maps to the 'Companies' table owned by Spring Boot / JPA."""
+    company_id    = models.CharField(max_length=255, primary_key=True, db_column='company_id')
+    symbol        = models.CharField(max_length=255)
+    name          = models.CharField(max_length=255)
+    initial_price = models.BigIntegerField(db_column='initial_price', default=0,
+                                           help_text='Price set by admin at creation time.')
+    current_price = models.BigIntegerField(db_column='current_price', default=0,
+                                           help_text='Live market price — updated after each trade.')
+    total_shares  = models.IntegerField(db_column='total_shares', default=0,
+                                        help_text='Maximum shares available for trading (set at creation).')
+    available_shares = models.IntegerField(db_column='available_shares', default=0,
+                                           help_text='Shares still available for new BUY orders.')
 
     class Meta:
-        managed = False          # Django reads but never modifies the table
-        db_table = 'companies'
+        managed = False          # Spring Boot owns DDL; Django only reads/writes data
+        db_table = 'Companies'
         verbose_name = 'Company'
         verbose_name_plural = 'Companies'
 
@@ -20,13 +26,15 @@ class Company(models.Model):
 
 
 class Order(models.Model):
-    """Maps to the 'orders' table created by Spring Boot / JPA."""
+    """Maps to the 'Orders' table created by Spring Boot / JPA."""
     order_id     = models.CharField(max_length=255, primary_key=True, db_column='order_id')
     symbol       = models.CharField(max_length=255)
     buy_sell     = models.BooleanField(db_column='buy_sell')        # True = BUY
     market_limit = models.BooleanField(db_column='market_limit')    # True = MARKET
-    status       = models.BooleanField()                             # True = Filled
-    shares       = models.IntegerField()
+    status       = models.BooleanField()                            # True = Filled
+    shares         = models.IntegerField()
+    initial_shares = models.IntegerField(db_column='initial_shares', default=0,
+                                         help_text='Original quantity of the order at creation.')
     price        = models.BigIntegerField()
     entry_time   = models.BigIntegerField(db_column='entry_time')
     event_time   = models.BigIntegerField(db_column='event_time', null=True, blank=True)
@@ -42,7 +50,7 @@ class Order(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'orders'
+        db_table = 'Orders'
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
 
@@ -52,7 +60,7 @@ class Order(models.Model):
 
 
 class Trade(models.Model):
-    """Maps to the 'trades' table created by Spring Boot / JPA."""
+    """Maps to the 'Trades' table created by Spring Boot / JPA."""
     trade_id      = models.CharField(max_length=255, primary_key=True, db_column='trade_id')
     symbol        = models.CharField(max_length=255)
     buy_order_id  = models.CharField(max_length=255, db_column='buy_order_id')
@@ -71,7 +79,7 @@ class Trade(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'trades'
+        db_table = 'Trades'
         verbose_name = 'Trade'
         verbose_name_plural = 'Trades'
 
