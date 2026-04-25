@@ -24,15 +24,19 @@ public class Trade {
     @Id
     private String tradeId;
 
-    @Column(nullable=false)
+    @Column(name = "symbol", nullable = false)
     private String symbol;
-    @Column(nullable=false)
+    
+    @Column(name = "buy_order_id", nullable = false)
     private String buyOrderId;
-    @Column(nullable=false)
+    
+    @Column(name = "sell_order_id", nullable = false)
     private String sellOrderId;
-    @Column(nullable=false)
+    
+    @Column(name = "price", nullable = false)
     private long price;
-    @Column(nullable=false)
+    
+    @Column(name = "quantity", nullable = false)
     private int quantity;
 
     private long tradeTime;

@@ -3,22 +3,52 @@ import { useNavigate } from "react-router-dom"
 import api from "../../api/apiConfig"
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
+import AddAssetModal from "./AddAssetModal";
 
 function Home() {
     const [companies, setCompanies] = useState([])
+    const [marketStats, setMarketStats] = useState({
+        marketStatus: "Operational",
+        totalVolume: 0,
+        avgLatency: 0
+    })
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate()
     const stompClient = useRef(null);
+
+    const formatVolume = (val) => {
+        if (!val) return "$0";
+        if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
+        if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+        if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+        if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
+        return `$${val.toLocaleString()}`;
+    };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await api.get("allCompanies");
-                setCompanies(res.data)
+                // Filter out broken records (missing symbol or name) to prevent 404s
+                const validCompanies = res.data.filter(c => c.symbol && c.name);
+                setCompanies(validCompanies);
             } catch (error) {
                 console.error(error);
             }
         };
+
+        const fetchStats = async () => {
+            try {
+                const statsRes = await api.get("market-stats");
+                setMarketStats(statsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch market stats", error);
+            }
+        };
+
         fetchData();
+        fetchStats();
+        const statsInterval = setInterval(fetchStats, 5000);
 
         const socket = new SockJS("http://localhost:8080/ws");
         const client = Stomp.over(socket);
@@ -30,10 +60,17 @@ function Home() {
                     c.companyId === update.companyId ? { ...c, currentPrice: update.price } : c
                 ));
             });
+
+            // New: Subscribe to global market stats for real-time volume/latency updates
+            client.subscribe("/topic/market-stats", (msg) => {
+                const stats = JSON.parse(msg.body);
+                setMarketStats(stats);
+            });
         });
 
         return () => {
             if (stompClient.current) stompClient.current.disconnect();
+            clearInterval(statsInterval);
         };
     }, []);
 
@@ -54,14 +91,25 @@ function Home() {
                     </p>
                     <span className="h-px w-12 bg-gray-700"></span>
                 </div>
+                
+                {/* Add Asset Button */}
+                <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-4 flex items-center space-x-3 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 py-3 px-8 rounded-2xl transition-all group"
+                >
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white scale-90 group-hover:scale-100 transition-transform">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Register New Asset</span>
+                </button>
             </div>
 
             {/* Quick Stats Banner */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {[
-                    { label: "Market Status", value: "Operational", color: "text-green-400" },
-                    { label: "Total Volume", value: "$4.2B", color: "text-indigo-400" },
-                    { label: "Avg Latency", value: "0.42ms", color: "text-purple-400" }
+                    { label: "Market Status", value: marketStats.marketStatus, color: "text-green-400" },
+                    { label: "Total Volume", value: formatVolume(marketStats.totalVolume), color: "text-indigo-400" },
+                    { label: "Avg Latency", value: `${marketStats.avgLatency.toFixed(2)}ms`, color: "text-purple-400" }
                 ].map((stat, i) => (
                     <div key={i} className="bg-[#16161e]/50 backdrop-blur-xl border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center space-y-1 hover:border-indigo-500/30 transition-all duration-500">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</span>
@@ -130,6 +178,18 @@ function Home() {
                 <span>Real-time Feed Active</span>
                 <span>Node: 0x2A...4F</span>
             </div>
+
+            <AddAssetModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                onRefresh={() => {
+                    const fetchData = async () => {
+                        const res = await api.get("allCompanies");
+                        setCompanies(res.data.filter(c => c.symbol && c.name));
+                    };
+                    fetchData();
+                }}
+            />
         </div>
     )
 }

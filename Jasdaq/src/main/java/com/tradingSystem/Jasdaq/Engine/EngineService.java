@@ -99,10 +99,22 @@ public class EngineService {
                     }
                 }
 
+                // New: Handle affected existing orders (e.g., the partially filled IPO order)
+                List<Order> affected = tradeResults.affectedOrders();
+                if (affected != null) {
+                    for (Order affectedOrder : affected) {
+                        affectedOrder.setCompany(company);
+                        saveOrderToDatabaseAsync(affectedOrder);
+                        wsTemplate.convertAndSend("/topic/orders", affectedOrder);
+                    }
+                }
+
                 // 3. Send WebSocket confirmation to ALL subscribers
                 wsTemplate.convertAndSend("/topic/orders", order);
 
-                // 4. Broadcast market price update
+                // 4. Broadcast global market stats and price update
+                broadcastMarketStats();
+                
                 Map<String, Object> update = Map.of(
                     "companyId", companyId,
                     "price", executedPrice,
@@ -151,6 +163,28 @@ public class EngineService {
         return engine.submitMetricsRequest();
     }
 
+    public Map<String, Object> getGlobalMarketStats() {
+        Long totalVolume = tradeRepository.getTotalVolume();
+        Double avgLatency = orderRepository.getAverageLatency();
+
+        System.out.println("[DEBUG] Global Stats - Volume: " + totalVolume + ", Latency: " + avgLatency);
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("marketStatus", "Operational");
+        stats.put("totalVolume", totalVolume != null ? totalVolume : 0L);
+        stats.put("avgLatency", avgLatency != null ? avgLatency : 0.0);
+        stats.put("timestamp", System.currentTimeMillis());
+        return stats;
+    }
+
+    private void broadcastMarketStats() {
+        try {
+            wsTemplate.convertAndSend("/topic/market-stats", getGlobalMarketStats());
+        } catch (Exception e) {
+            System.err.println("[WARN] Failed to broadcast global market stats: " + e.getMessage());
+        }
+    }
+
     @Async("persistenceExecutor")
     private void saveOrderToDatabaseAsync(Order order) {
         try {
@@ -174,6 +208,7 @@ public class EngineService {
         try {
             orderRepository.delete(order);
         } catch (Exception e) {
+            System.err.println("[ERROR] Failed to delete order: " + order.getOrderId());
             e.printStackTrace();
         }
     }

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import com.tradingSystem.Jasdaq.Engine.DTO.OrderDTO1;
 import org.springframework.context.ApplicationEventPublisher;
+import java.util.UUID;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:8000"})
 @RestController
@@ -24,6 +25,9 @@ public class CompanyController {
     private CompanyService companyService;
 
     @Autowired
+    private com.tradingSystem.Jasdaq.Engine.TradeRepository tradeRepository;
+
+    @Autowired
     private com.tradingSystem.Jasdaq.Engine.EngineService engineService;
 
     @Autowired
@@ -32,6 +36,11 @@ public class CompanyController {
     @GetMapping("/allCompanies")
     public ResponseEntity<List<Companies>> getAllCompanies() {
         return new ResponseEntity<>(companyService.allCompanies(), HttpStatus.OK);
+    }
+
+    @GetMapping("/market-stats")
+    public ResponseEntity<Map<String, Object>> getMarketStats() {
+        return new ResponseEntity<>(engineService.getGlobalMarketStats(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -50,18 +59,38 @@ public class CompanyController {
                 });
     }
 
+    @GetMapping("/{id}/trades")
+    public ResponseEntity<List<com.tradingSystem.Jasdaq.Engine.Trade>> getTrades(@PathVariable String id) {
+        return ResponseEntity.ok(tradeRepository.findByCompanyCompanyIdOrderByTradeTimeAsc(id));
+    }
+
     /**
      * Called by the Django admin panel after a new Company is saved.
      */
     @PostMapping("/companies")
     public ResponseEntity<Map<String, Object>> registerCompany(@RequestBody Companies company) {
         try {
+            // Validate incoming data
+            if (company.getSymbol() == null || company.getSymbol().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "error", "message", "Symbol is required"));
+            }
+            if (company.getName() == null || company.getName().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "error", "message", "Company name is required"));
+            }
+
+            // Generate companyId if missing (matching Django's format)
+            if (company.getCompanyId() == null || company.getCompanyId().isBlank()) {
+                String symbol = company.getSymbol().toUpperCase().replaceAll("[^A-Z0-9]", "");
+                company.setCompanyId(symbol + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            }
+
             if (company.getAvailableShares() == 0) {
                 company.setAvailableShares(company.getTotalShares());
             }
             if (company.getCurrentPrice() == 0) {
                 company.setCurrentPrice(company.getInitialPrice());
             }
+            
             Companies saved = companyService.registerCompany(company);
 
             // Automatically place an IPO SELL order for the entire totalShares pool at the initial price.

@@ -80,7 +80,7 @@ public class MatchingEngine {
         return currentPrice;
     }
 
-    public record TradeResults(List<Trade> list,Order order) {
+    public record TradeResults(List<Trade> list, Order order, java.util.List<Order> affectedOrders) {
     }
 
     public record MarketMetrics(
@@ -112,11 +112,11 @@ public class MatchingEngine {
             order = new Order(orderId, symbol, buySell, price, shares, entryTime, marketLimit);
             if (marketLimit) {
                 // if it is a market order
-                Order order1 = executeMarketOrder(order);
-                if (order1 == null) {
+                OrderWrapper wrap = executeMarketOrder(order);
+                if (wrap == null) {
                     return null;
                 } else {
-                    return new TradeResults(new LinkedList<>(list), order1);
+                    return new TradeResults(new LinkedList<>(list), wrap.getOrder(), wrap.getAffectedOrders());
                 }
             } else {
                 OrderWrapper wrap;
@@ -136,7 +136,7 @@ public class MatchingEngine {
                 } else {
                     order.status = true;
                 }
-                return new TradeResults(new LinkedList<>(list), order);
+                return new TradeResults(new LinkedList<>(list), order, wrap.getAffectedOrders());
             }
         } else {
             System.out.println("Order with orderId " + orderId + " already exists");
@@ -199,15 +199,15 @@ public class MatchingEngine {
                 return executeOrder(incomingOrder, tree, totalShares);
             } else {
                 // when prices does not match
-                return new OrderWrapper(incomingOrder, totalShares);
+                return new OrderWrapper(incomingOrder, totalShares, new LinkedList<>());
             }
         } else {
             // book is empty
-            return new OrderWrapper(incomingOrder, totalShares);
+            return new OrderWrapper(incomingOrder, totalShares, new LinkedList<>());
         }
     }
 
-    private Order executeMarketOrder(Order order) {
+    private OrderWrapper executeMarketOrder(Order order) {
         // market orders are executed as soon as they are placed
         if (order == null) {
             System.out.println("Null Order");
@@ -226,7 +226,7 @@ public class MatchingEngine {
                 // Buy market: match against sell side until empty or filled
                 wrap = executeOrder(order, sellTree, totalSellShares);
                 totalSellShares = wrap.getShares();
-                return wrap.getOrder();
+                return wrap;
             }
         } else {
             // Sell market: match against buy side
@@ -236,7 +236,7 @@ public class MatchingEngine {
             } else {
                 wrap = executeOrder(order, buyTree, totalBuyShares);
                 totalBuyShares = wrap.getShares();
-                return wrap.getOrder();
+                return wrap;
             }
         }
     }
@@ -247,6 +247,7 @@ public class MatchingEngine {
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
         boolean isBuy = incomingOrder.buySell;
         long lastMatchedPrice = 0;
+        List<Order> affected = new LinkedList<>();
 
         while (remainingShares > 0 && limit != null) {
 
@@ -290,6 +291,12 @@ public class MatchingEngine {
             }
             
             remainingShares -= matchQuantity;
+            
+            // Track affected order (the existing order in the book)
+            if (!affected.contains(order)) {
+                affected.add(order);
+            }
+
             limit = tree.bestPrice();
         }
         
@@ -304,7 +311,7 @@ public class MatchingEngine {
             incomingOrder.status = true;
         }
 
-        return new OrderWrapper(incomingOrder, totalShares);
+        return new OrderWrapper(incomingOrder, totalShares, affected);
     }
 
     private Order placeOrder(Order order) {
@@ -389,10 +396,12 @@ public class MatchingEngine {
 
         Order order;
         long totalShares;
+        List<Order> affectedOrders;
 
-        public OrderWrapper(Order order, long totalShares) {
+        public OrderWrapper(Order order, long totalShares, List<Order> affectedOrders) {
             this.totalShares = totalShares;
             this.order = order;
+            this.affectedOrders = affectedOrders;
         }
 
         public Order getOrder() {
@@ -401,6 +410,10 @@ public class MatchingEngine {
 
         public long getShares() {
             return totalShares;
+        }
+
+        public List<Order> getAffectedOrders() {
+            return affectedOrders;
         }
     }
 

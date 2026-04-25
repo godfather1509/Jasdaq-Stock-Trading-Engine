@@ -180,8 +180,24 @@ function CompanyPage() {
             }
         };
 
+        const fetchTrades = async () => {
+            try {
+                const res = await api.get(`${companyId}/trades`);
+                if (res.data && res.data.length > 0) {
+                    const mapped = res.data.map(t => ({
+                        time: new Date(t.tradeTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                        price: t.price
+                    }));
+                    setChartData(mapped.slice(-20)); // Show last 20 trades
+                }
+            } catch (err) {
+                console.warn("Failed to fetch historical trades", err);
+            }
+        };
+
         fetchCompany();
         fetchMetrics();
+        fetchTrades();
         const interval = setInterval(fetchMetrics, 3000); // Poll every 3 seconds
         return () => clearInterval(interval);
     }, [companyId]);

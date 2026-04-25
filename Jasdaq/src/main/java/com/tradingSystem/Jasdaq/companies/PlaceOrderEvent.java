@@ -10,6 +10,7 @@ public class PlaceOrderEvent extends ApplicationEvent {
     boolean marketLimit;
     String companyId;
 
+
     public PlaceOrderEvent(Object source, boolean buySell, long price, int shares, boolean marketLimit, String companyId){
         super(source);
         this.buySell=buySell;
