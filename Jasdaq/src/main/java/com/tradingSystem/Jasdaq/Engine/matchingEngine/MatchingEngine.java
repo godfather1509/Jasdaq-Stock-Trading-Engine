@@ -252,6 +252,8 @@ public class MatchingEngine {
         boolean marketLimit = incomingOrder.marketLimit; // market order or limit order
         boolean isBuy = incomingOrder.buySell;
         long lastMatchedPrice = 0;
+        long weightedPriceSum = 0; // for VWAP final price on incoming order
+        int filledShares = 0;
         List<Order> affected = new LinkedList<>();
 
         while (remainingShares > 0 && limit != null) {
@@ -270,12 +272,15 @@ public class MatchingEngine {
                 limit = tree.bestPrice();
                 continue;
             }
-            
+
             lastMatchedPrice = order.getPrice();
             int matchQuantity = Math.min(remainingShares, order.shares);
-            
-            trade = new Trade(IdGenerator.nextID(symbol, 't'), 
-                             isBuy ? incomingOrder.orderId : order.orderId, 
+
+            weightedPriceSum += lastMatchedPrice * matchQuantity;
+            filledShares += matchQuantity;
+
+            trade = new Trade(IdGenerator.nextID(symbol, 't'),
+                             isBuy ? incomingOrder.orderId : order.orderId,
                              isBuy ? order.orderId : incomingOrder.orderId,
                              order.getPrice(), matchQuantity, symbol);
             list.add(trade);
@@ -294,9 +299,9 @@ public class MatchingEngine {
                 totalShares -= matchQuantity;
                 limit.limitVolume -= matchQuantity;
             }
-            
+
             remainingShares -= matchQuantity;
-            
+
             // Track affected order (the existing order in the book)
             if (!affected.contains(order)) {
                 affected.add(order);
@@ -304,14 +309,15 @@ public class MatchingEngine {
 
             limit = tree.bestPrice();
         }
-        
+
         incomingOrder.shares = remainingShares;
-        if (lastMatchedPrice != 0) {
-            incomingOrder.finalPrice = lastMatchedPrice;
+        if (filledShares > 0) {
+            // VWAP across all price levels swept by this order
+            incomingOrder.finalPrice = weightedPriceSum / filledShares;
             incomingOrder.eventTime = System.currentTimeMillis();
-            currentPrice = lastMatchedPrice; 
+            currentPrice = lastMatchedPrice; // LTP = last individual fill price (standard)
         }
-        
+
         if (remainingShares == 0) {
             incomingOrder.status = true;
         }
