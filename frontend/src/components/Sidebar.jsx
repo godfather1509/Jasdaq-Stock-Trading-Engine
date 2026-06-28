@@ -2,6 +2,14 @@ import { useEffect, useState } from "react"
 import { NavLink } from "react-router-dom"
 import api from "../../api/apiConfig"
 
+const BG      = "#0f172a";
+const SURFACE = "#1e293b";
+const BORDER  = "#334155";
+const TEXT    = "#f1f5f9";
+const TEXT_SEC= "#94a3b8";
+const TEXT_DIM= "#64748b";
+const INDIGO  = "#6366f1";
+const GREEN   = "#10b981";
 
 function Sidebar() {
     const [companies, setCompanies] = useState([])
@@ -19,64 +27,81 @@ function Sidebar() {
     }, []);
 
     return (
-        <aside className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 border-r border-white/5 bg-[#0a0a0f]">
-            <div className="h-full px-4 py-8 overflow-y-auto flex flex-col space-y-8">
-                {/* Logo Section */}
-                <NavLink to="/" className="px-4 group">
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-black tracking-tighter text-white group-hover:text-indigo-400 transition-colors">
-                            JAS<span className="text-indigo-500">DAQ</span>
-                        </span>
-                        <div className="flex items-center space-x-2 mt-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500">System Live</span>
-                        </div>
-                    </div>
+        <aside style={{
+            position: "fixed", top: 0, left: 0, zIndex: 40,
+            width: "260px", height: "100vh",
+            background: BG, borderRight: `1px solid ${BORDER}`,
+            display: "flex", flexDirection: "column",
+            fontFamily: "'Inter', system-ui, sans-serif"
+        }}>
+            {/* Logo */}
+            <div style={{ padding: "24px 20px", borderBottom: `1px solid ${BORDER}` }}>
+                <NavLink to="/" style={{ textDecoration: "none" }}>
+                    <p style={{ fontSize: "18px", fontWeight: 700, color: TEXT, margin: "0 0 4px 0", letterSpacing: "-0.3px" }}>
+                        Jasdaq
+                    </p>
                 </NavLink>
-
-                {/* Navigation Section */}
-                <div className="flex-1">
-                    <p className="px-4 text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-4">Market Assets</p>
-                    <ul className="space-y-1.5">
-                        {companies.map((company, index) => (
-                            <li key={index}>
-                                <NavLink
-                                    to={`/company/${company.symbol}/${company.companyId}`}
-                                    className={({ isActive }) =>
-                                        `flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                                            ? "bg-indigo-600/10 border-l-4 border-indigo-500 text-white"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                                        }`
-                                    }
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[10px] text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                                            {company.symbol[0]}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-bold tracking-tight">{company.symbol}</span>
-                                            <span className="text-[10px] text-gray-600 group-hover:text-gray-400 transition-colors font-medium">{company.name}</span>
-                                        </div>
-                                    </div>
-                                    <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </NavLink>
-                            </li>
-                        ))}
-                    </ul>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: GREEN }}></div>
+                    <span style={{ fontSize: "11px", color: TEXT_DIM, fontWeight: 500 }}>System Live</span>
                 </div>
+            </div>
 
-                {/* Account/Status Footer */}
-                <div className="px-4 pt-6 border-t border-white/5">
-                    <div className="bg-white/5 rounded-2xl p-4 flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-xs">
-                            JD
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-black text-white">Dev Console</span>
-                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Operator-01</span>
-                        </div>
+            {/* Nav list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px" }}>
+                <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 8px", marginBottom: "8px" }}>
+                    Market Assets
+                </p>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
+                    {companies.map((company, index) => (
+                        <li key={index}>
+                            <NavLink
+                                to={`/company/${company.symbol}/${company.companyId}`}
+                                style={({ isActive }) => ({
+                                    display: "flex", alignItems: "center", gap: "12px",
+                                    padding: "10px 12px", borderRadius: "8px",
+                                    textDecoration: "none", transition: "background 0.15s",
+                                    background: isActive ? `${INDIGO}18` : "transparent",
+                                    borderLeft: isActive ? `3px solid ${INDIGO}` : "3px solid transparent",
+                                    color: isActive ? TEXT : TEXT_SEC,
+                                })}
+                                onMouseEnter={e => { if (!e.currentTarget.style.borderLeftColor.includes("99")) e.currentTarget.style.background = `${SURFACE}`; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = e.currentTarget.getAttribute("data-active") === "true" ? `${INDIGO}18` : "transparent"; }}
+                            >
+                                <div style={{
+                                    width: "32px", height: "32px", borderRadius: "8px",
+                                    background: `${INDIGO}15`, border: `1px solid ${INDIGO}30`,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: "12px", fontWeight: 700, color: INDIGO, flexShrink: 0
+                                }}>
+                                    {company.symbol[0]}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                    <p style={{ fontSize: "13px", fontWeight: 600, color: "inherit", margin: 0 }}>{company.symbol}</p>
+                                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "1px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {company.name}
+                                    </p>
+                                </div>
+                            </NavLink>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "16px 20px", borderTop: `1px solid ${BORDER}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{
+                        width: "32px", height: "32px", borderRadius: "8px",
+                        background: `${INDIGO}20`, border: `1px solid ${INDIGO}40`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "11px", fontWeight: 700, color: INDIGO
+                    }}>
+                        JD
+                    </div>
+                    <div>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: TEXT, margin: 0 }}>Dev Console</p>
+                        <p style={{ fontSize: "11px", color: TEXT_DIM, margin: 0 }}>Operator-01</p>
                     </div>
                 </div>
             </div>

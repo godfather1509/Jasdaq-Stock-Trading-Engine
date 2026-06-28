@@ -1,6 +1,6 @@
 package com.tradingSystem.Jasdaq.companies;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -48,12 +48,12 @@ public class Companies {
     /** Shares still available for new BUY orders (decremented on reservation, incremented on cancel/fill). */
     private int availableShares;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnore
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Order> orders;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnore
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Trade> tradeIds;
 
     /** Convenience constructor used by DataInitializer. */

@@ -1,2 +1,16 @@
 Testing/
 .class
+
+# Environment secrets — never commit these
+.env
+**/.env
+
+# IDE and tooling
+.claude/
+.vscode/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo

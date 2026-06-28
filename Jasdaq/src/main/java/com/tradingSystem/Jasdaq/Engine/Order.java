@@ -61,6 +61,13 @@ public class Order {
     @JsonIgnore
     public Order prevOrder;
 
+    /** Derived fill status exposed to the frontend. No DB column needed. */
+    public String getFillStatus() {
+        if (status) return "FILLED";
+        if (shares < initialShares) return "PARTIALLY_FILLED";
+        return "PENDING";
+    }
+
     @ManyToOne
     @JoinColumn(name = "companyId", nullable = true)
     @JsonBackReference

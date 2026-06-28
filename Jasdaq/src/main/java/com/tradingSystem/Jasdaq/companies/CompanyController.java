@@ -3,12 +3,15 @@ package com.tradingSystem.Jasdaq.companies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +63,12 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}/trades")
-    public ResponseEntity<List<com.tradingSystem.Jasdaq.Engine.Trade>> getTrades(@PathVariable String id) {
-        return ResponseEntity.ok(tradeRepository.findByCompanyCompanyIdOrderByTradeTimeAsc(id));
+    public ResponseEntity<Page<com.tradingSystem.Jasdaq.Engine.Trade>> getTrades(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return ResponseEntity.ok(
+                tradeRepository.findByCompanyCompanyIdOrderByTradeTimeAsc(id, PageRequest.of(page, size)));
     }
 
     /**
@@ -115,8 +122,8 @@ public class CompanyController {
     @PostMapping("/orders")
     public ResponseEntity<Map<String, Object>> placeOrderRest(@RequestBody OrderDTO1 request) {
         try {
-            engineService.placeOrder(request.isBuySell(), request.getPrice(), request.getShares(),
-                    request.isMarketLimit(), request.getCompanyId());
+            engineService.placeOrder(request.getBuySell(), request.getPrice(), request.getShares(),
+                    request.getMarketLimit(), request.getCompanyId());
             return ResponseEntity.ok(Map.of("status", "ok", "message", "Order placed successfully in Engine"));
         } catch (Exception e) {
             e.printStackTrace();

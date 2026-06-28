@@ -5,108 +5,108 @@ import api from "../../api/apiConfig";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
+const BG       = "#0f172a";
+const SURFACE  = "#1e293b";
+const RAISED   = "#162032";
+const ELEVATED = "#0d1625";
+const BORDER   = "#334155";
+const TEXT     = "#f1f5f9";
+const TEXT_SEC = "#94a3b8";
+const TEXT_DIM = "#64748b";
+const INDIGO   = "#6366f1";
+const INDIGO_LT= "#818cf8";
+const GREEN    = "#10b981";
+const GREEN_LT = "#34d399";
+const RED      = "#ef4444";
+const RED_LT   = "#f87171";
+
+const card = {
+    background: SURFACE,
+    border: `1px solid ${BORDER}`,
+    borderRadius: "12px",
+};
+
+const label = {
+    fontSize: "11px", fontWeight: 600, color: TEXT_DIM,
+    textTransform: "uppercase", letterSpacing: "0.07em",
+    display: "block", marginBottom: "6px"
+};
+
 function CompanyPage() {
     const { companyId, companySymbol } = useParams();
     const [c, setC] = useState({});
     const [o, setO] = useState([]);
     const [chartData, setChartData] = useState([]);
-    const [toasts, setToasts] = useState([]);   // [{id, reason, type}]
+    const [toasts, setToasts] = useState([]);
     const [metrics, setMetrics] = useState({
-        totalBuyShares: 0,
-        totalSellShares: 0,
-        buyLimitOrders: 0,
-        sellLimitOrders: 0,
-        buyMarketOrders: 0,
-        sellMarketOrders: 0,
+        totalBuyShares: 0, totalSellShares: 0,
+        buyLimitOrders: 0, sellLimitOrders: 0,
+        buyMarketOrders: 0, sellMarketOrders: 0,
         currentPrice: 0
     });
-    const [form, setForm] = useState({
-        quantity: "",
-        price: "",
-        type: "market",
-        side: "buy",
-    });
+    const [form, setForm] = useState({ quantity: "", price: "", type: "market", side: "buy" });
 
     const stompClient = useRef(null);
     const toastCounterRef = useRef(0);
+    const pendingOrderRef = useRef(null);
 
-    // Helper: add a toast, auto-dismiss after 6 seconds
     const showToast = (reason, type = "error") => {
         const id = ++toastCounterRef.current;
         setToasts(prev => [...prev, { id, reason, type }]);
-        setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id));
-        }, 6000);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 6000);
     };
 
     const dismissToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
 
-
     useEffect(() => {
         const socket = new SockJS("http://localhost:8080/ws");
         const client = Stomp.over(socket);
+        client.debug = null;
 
         client.connect({}, () => {
-            console.log("Connected to WebSocket");
             stompClient.current = client;
 
             client.subscribe("/topic/market-updates", (msg) => {
                 const update = JSON.parse(msg.body);
                 if (update.companyId === companyId) {
                     setC(prev => ({ ...prev, currentPrice: update.price }));
-                    
                     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    setChartData(prev => {
-                        const newData = [...prev, { time, price: update.price }];
-                        return newData.slice(-20); // Keep last 20 points
-                    });
+                    setChartData(prev => [...prev, { time, price: update.price }].slice(-20));
                 }
             });
 
             client.subscribe("/topic/orders", (msg) => {
                 const updatedOrder = JSON.parse(msg.body);
-                // Only show orders for this specific company
                 if (updatedOrder.symbol !== companySymbol) return;
-                // Order confirmed – cancel any pending rejection timer
                 if (pendingOrderRef.current) {
                     clearTimeout(pendingOrderRef.current);
                     pendingOrderRef.current = null;
                 }
                 setO(prev => {
                     const exists = prev.find(item => item.orderId === updatedOrder.orderId);
-                    if (exists) {
-                        return prev.map(item => item.orderId === updatedOrder.orderId ? updatedOrder : item);
-                    }
+                    if (exists) return prev.map(item => item.orderId === updatedOrder.orderId ? updatedOrder : item);
                     return [updatedOrder, ...prev];
                 });
             });
 
-            // Subscription for cancel confirmation
             client.subscribe("/topic/cancel", (msg) => {
                 const canceledOrder = JSON.parse(msg.body);
                 setO(prev => prev.filter(item => item.orderId !== canceledOrder.orderId));
             });
 
-            // Subscription for order rejections from the matching engine
             client.subscribe("/topic/order-rejected", (msg) => {
                 const rejection = JSON.parse(msg.body);
-                console.log("[ORDER REJECTED received]", rejection);
                 showToast(rejection.reason || "Order was rejected by the matching engine.", "error");
             });
         });
 
-        return () => {
-            if (stompClient.current) stompClient.current.disconnect();
-        };
+        return () => { if (stompClient.current) stompClient.current.disconnect(); };
     }, [companyId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm(prev => ({ ...prev, [name]: value }));
     };
-
-    // Track pending order so we can detect if engine silently rejected it
-    const pendingOrderRef = useRef(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -118,26 +118,18 @@ function CompanyPage() {
                 marketLimit: isMkt,
                 shares: parseInt(form.quantity),
                 price: isMkt ? 0 : parseInt(form.price),
-                companyId: companyId
+                companyId
             };
-
-            // For market orders start a rejection-detection timer:
-            // if the server doesn't broadcast an order within 4s, it was silently rejected
             if (isMkt) {
                 const side = form.side.toUpperCase();
                 const opposite = form.side === "buy" ? "SELL" : "BUY";
                 const timer = setTimeout(() => {
                     pendingOrderRef.current = null;
-                    showToast(
-                        `${side} market order rejected: No ${opposite} orders available in the book to match against. Place a LIMIT order instead.`,
-                        "error"
-                    );
+                    showToast(`${side} market order rejected: No ${opposite} orders available. Place a LIMIT order instead.`, "error");
                 }, 4000);
                 pendingOrderRef.current = timer;
             }
-
             stompClient.current.send("/app/placeOrder", {}, JSON.stringify(orderPayload));
-            // Reset form after submit
             setForm(prev => ({ ...prev, quantity: "", price: "" }));
         } else {
             showToast("WebSocket not connected. Please refresh the page.", "error");
@@ -146,11 +138,7 @@ function CompanyPage() {
 
     const handleCancelOrder = (orderId) => {
         if (stompClient.current && stompClient.current.connected) {
-            const cancelPayload = {
-                orderId: orderId,
-                companyId: companyId
-            };
-            stompClient.current.send("/app/cancelOrder", {}, JSON.stringify(cancelPayload));
+            stompClient.current.send("/app/cancelOrder", {}, JSON.stringify({ orderId, companyId }));
         }
     };
 
@@ -161,218 +149,255 @@ function CompanyPage() {
                 if (res.data) {
                     setC(res.data);
                     setO(res.data.orders || []);
-                    // Pre-fill chart with current price if empty
                     if (chartData.length === 0 && res.data.currentPrice) {
                         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         setChartData([{ time, price: res.data.currentPrice }]);
                     }
                 }
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         };
+
         const fetchMetrics = async () => {
             try {
                 const res = await api.get(`${companyId}/metrics`);
                 setMetrics(res.data);
-            } catch (err) {
-                console.warn("Failed to fetch metrics", err);
-            }
+            } catch (err) { console.warn("Failed to fetch metrics", err); }
         };
 
         const fetchTrades = async () => {
             try {
                 const res = await api.get(`${companyId}/trades`);
-                if (res.data && res.data.length > 0) {
-                    const mapped = res.data.map(t => ({
+                const trades = res.data?.content ?? res.data;
+                if (trades && trades.length > 0) {
+                    const mapped = trades.map(t => ({
                         time: new Date(t.tradeTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                         price: t.price
                     }));
-                    setChartData(mapped.slice(-20)); // Show last 20 trades
+                    setChartData(mapped.slice(-20));
                 }
-            } catch (err) {
-                console.warn("Failed to fetch historical trades", err);
-            }
+            } catch (err) { console.warn("Failed to fetch historical trades", err); }
         };
 
         fetchCompany();
         fetchMetrics();
         fetchTrades();
-        const interval = setInterval(fetchMetrics, 3000); // Poll every 3 seconds
+        const interval = setInterval(fetchMetrics, 3000);
         return () => clearInterval(interval);
     }, [companyId]);
 
-    return (
-        <div className="p-6 text-black space-y-8 bg-gray-50 min-h-screen">
+    const inputStyle = {
+        width: "100%", background: ELEVATED, border: `1px solid ${BORDER}`,
+        borderRadius: "8px", padding: "10px 14px", color: TEXT,
+        fontSize: "14px", outline: "none", transition: "border-color 0.15s",
+        fontFamily: "'Inter', system-ui, sans-serif"
+    };
 
-            {/* ── Toast notifications for order rejections ── */}
+    const isBuy = form.side === "buy";
+    const btnColor = isBuy ? GREEN : RED;
+
+    return (
+        <div style={{ background: BG, color: TEXT, minHeight: "100vh", padding: "28px 32px", fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+            {/* Toast notifications */}
             <div style={{
-                position: "fixed", top: "24px", right: "24px",
-                zIndex: 9999, display: "flex", flexDirection: "column", gap: "12px",
-                maxWidth: "420px", width: "100%"
+                position: "fixed", top: "20px", right: "20px", zIndex: 9999,
+                display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px", width: "100%"
             }}>
                 {toasts.map(toast => (
                     <div key={toast.id} style={{
-                        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
-                        border: "1px solid rgba(239,68,68,0.5)",
-                        borderRadius: "16px",
-                        padding: "16px 20px",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                        boxShadow: "0 8px 32px rgba(239,68,68,0.2), 0 2px 8px rgba(0,0,0,0.4)",
-                        animation: "slideInRight 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-                        backdropFilter: "blur(20px)",
+                        background: SURFACE, border: `1px solid ${RED}40`,
+                        borderLeft: `4px solid ${RED}`,
+                        borderRadius: "10px", padding: "14px 16px",
+                        display: "flex", alignItems: "flex-start", gap: "12px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+                        animation: "slideInRight 0.2s ease-out",
                     }}>
-                        {/* Icon */}
-                        <div style={{
-                            width: "36px", height: "36px", borderRadius: "50%",
-                            background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0, fontSize: "18px"
-                        }}>⚠️</div>
-                        {/* Text */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{
-                                color: "#f87171", fontWeight: "700", fontSize: "13px",
-                                letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "4px"
-                            }}>Order Rejected</p>
-                            <p style={{
-                                color: "#e2e8f0", fontSize: "14px", lineHeight: "1.5",
-                                wordBreak: "break-word"
-                            }}>{toast.reason}</p>
+                            <p style={{ color: RED_LT, fontWeight: 600, fontSize: "12px", margin: "0 0 4px 0" }}>
+                                Order Rejected
+                            </p>
+                            <p style={{ color: TEXT_SEC, fontSize: "13px", margin: 0, lineHeight: 1.5 }}>
+                                {toast.reason}
+                            </p>
                         </div>
-                        {/* Close button */}
                         <button onClick={() => dismissToast(toast.id)} style={{
                             background: "none", border: "none", cursor: "pointer",
-                            color: "#94a3b8", fontSize: "18px", lineHeight: 1,
-                            flexShrink: 0, padding: "2px"
+                            color: TEXT_DIM, fontSize: "16px", lineHeight: 1, padding: "2px", flexShrink: 0
                         }}>✕</button>
                     </div>
                 ))}
             </div>
-            <style>{`
-                @keyframes slideInRight {
-                    from { opacity: 0; transform: translateX(100px); }
-                    to   { opacity: 1; transform: translateX(0); }
-                }
-            `}</style>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 flex flex-col items-center justify-center">
-                    <h1 className="text-4xl font-extrabold text-indigo-900">{c.name}</h1>
-                    <p className="text-indigo-600 font-mono tracking-widest text-lg">{c.symbol}</p>
-                    <p className="text-3xl font-bold mt-4 text-green-600">
+            {/* Page header */}
+            <div style={{ marginBottom: "28px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{
+                            width: "40px", height: "40px", borderRadius: "10px",
+                            background: `${INDIGO}20`, border: `1px solid ${INDIGO}40`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "16px", fontWeight: 700, color: INDIGO
+                        }}>
+                            {c.symbol?.[0]}
+                        </div>
+                        <div>
+                            <h1 style={{ fontSize: "22px", fontWeight: 700, color: TEXT, margin: 0 }}>{c.name}</h1>
+                            <p style={{ fontSize: "13px", color: TEXT_DIM, margin: "2px 0 0 0", fontWeight: 500 }}>{c.symbol}</p>
+                        </div>
+                    </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "0 0 4px 0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Current Price</p>
+                    <p style={{ fontSize: "28px", fontWeight: 700, color: GREEN, margin: 0, fontVariantNumeric: "tabular-nums" }}>
                         ${c.currentPrice?.toLocaleString()}
                     </p>
+                </div>
+            </div>
 
-                    {/* ── MARKET METRICS DASHBOARD ── */}
-                    <div className="mt-8 w-full grid grid-cols-2 gap-3">
-                        <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100">
-                            <p className="text-xs font-bold text-green-700 uppercase tracking-tight">Bid Volume</p>
-                            <p className="text-xl font-black text-green-900">{metrics.totalBuyShares?.toLocaleString()}</p>
-                            <div className="mt-1 flex items-center gap-1.5">
-                                <span className="text-[10px] bg-green-200 text-green-800 px-1.5 py-0.5 rounded-md font-bold">
+            {/* Top row: metrics + form + chart */}
+            <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "20px", marginBottom: "20px" }}>
+
+                {/* Left: metrics + order form */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                    {/* Bid / Ask metrics */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div style={{ ...card, padding: "16px" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 600, color: GREEN, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
+                                Bid Volume
+                            </p>
+                            <p style={{ fontSize: "20px", fontWeight: 700, color: TEXT, margin: "0 0 8px 0", fontVariantNumeric: "tabular-nums" }}>
+                                {metrics.totalBuyShares?.toLocaleString()}
+                            </p>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${GREEN}18`, color: GREEN_LT }}>
                                     {metrics.buyLimitOrders} LMT
                                 </span>
-                                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-bold">
+                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${INDIGO}18`, color: INDIGO_LT }}>
                                     {metrics.buyMarketOrders} MKT
                                 </span>
                             </div>
                         </div>
-
-                        <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100">
-                            <p className="text-xs font-bold text-red-700 uppercase tracking-tight">Ask Volume</p>
-                            <p className="text-xl font-black text-red-900">{metrics.totalSellShares?.toLocaleString()}</p>
-                            <div className="mt-1 flex items-center gap-1.5">
-                                <span className="text-[10px] bg-red-200 text-red-800 px-1.5 py-0.5 rounded-md font-bold">
+                        <div style={{ ...card, padding: "16px" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 600, color: RED, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
+                                Ask Volume
+                            </p>
+                            <p style={{ fontSize: "20px", fontWeight: 700, color: TEXT, margin: "0 0 8px 0", fontVariantNumeric: "tabular-nums" }}>
+                                {metrics.totalSellShares?.toLocaleString()}
+                            </p>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${RED}18`, color: RED_LT }}>
                                     {metrics.sellLimitOrders} LMT
                                 </span>
-                                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-bold">
+                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${INDIGO}18`, color: INDIGO_LT }}>
                                     {metrics.sellMarketOrders} MKT
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-8 w-full max-w-sm">
-                        <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-inner">
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Quantity</label>
+                    {/* Order form */}
+                    <div style={{ ...card, padding: "20px" }}>
+                        <p style={{ fontSize: "14px", fontWeight: 600, color: TEXT, margin: "0 0 16px 0" }}>Place Order</p>
+                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+                            {/* Buy / Sell toggle */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BORDER}` }}>
+                                {["buy", "sell"].map(side => (
+                                    <button
+                                        key={side}
+                                        type="button"
+                                        onClick={() => setForm(prev => ({ ...prev, side }))}
+                                        style={{
+                                            padding: "10px", border: "none", cursor: "pointer",
+                                            fontWeight: 600, fontSize: "13px",
+                                            fontFamily: "'Inter', system-ui, sans-serif",
+                                            background: form.side === side
+                                                ? (side === "buy" ? GREEN : RED)
+                                                : ELEVATED,
+                                            color: form.side === side ? "#fff" : TEXT_DIM,
+                                            transition: "background 0.15s, color 0.15s"
+                                        }}
+                                    >
+                                        {side.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div>
+                                <label style={label}>Order Type</label>
+                                <select name="type" value={form.type} onChange={handleChange} style={{ ...inputStyle, cursor: "pointer" }}>
+                                    <option value="market">Market</option>
+                                    <option value="limit">Limit</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style={label}>Quantity (shares)</label>
+                                <input
+                                    type="number" name="quantity" value={form.quantity}
+                                    onChange={handleChange} placeholder="0"
+                                    style={inputStyle}
+                                    onFocus={e => e.target.style.borderColor = INDIGO}
+                                    onBlur={e => e.target.style.borderColor = BORDER}
+                                    required
+                                />
+                            </div>
+
+                            {form.type === "limit" && (
+                                <div>
+                                    <label style={label}>Limit Price</label>
                                     <input
-                                        type="number"
-                                        name="quantity"
-                                        value={form.quantity}
-                                        onChange={handleChange}
-                                        placeholder="Number of shares"
-                                        className="w-full border-0 bg-white p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500"
+                                        type="number" name="price" value={form.price}
+                                        onChange={handleChange} placeholder="0"
+                                        style={inputStyle}
+                                        onFocus={e => e.target.style.borderColor = INDIGO}
+                                        onBlur={e => e.target.style.borderColor = BORDER}
                                         required
                                     />
                                 </div>
-                                
-                                {form.type === "limit" && (
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Limit Price</label>
-                                        <input
-                                            type="number"
-                                            name="price"
-                                            value={form.price}
-                                            onChange={handleChange}
-                                            placeholder="Price per share"
-                                            className="w-full border-0 bg-white p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500"
-                                            required
-                                        />
-                                    </div>
-                                )}
+                            )}
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <select
-                                        name="type"
-                                        value={form.type}
-                                        onChange={handleChange}
-                                        className="border-0 bg-white p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500"
-                                    >
-                                        <option value="market">Market</option>
-                                        <option value="limit">Limit</option>
-                                    </select>
-                                    <select
-                                        name="side"
-                                        value={form.side}
-                                        onChange={handleChange}
-                                        className={`border-0 p-3 rounded-xl shadow-sm text-white font-bold transition-colors ${form.side === 'buy' ? 'bg-green-500' : 'bg-red-500'}`}
-                                    >
-                                        <option value="buy" className="bg-white text-black">BUY</option>
-                                        <option value="sell" className="bg-white text-black">SELL</option>
-                                    </select>
-                                </div>
-                                
-                                <button
-                                    type="submit"
-                                    className="mt-2 bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 active:scale-95 transition-all transform"
-                                >
-                                    Place Order
-                                </button>
-                            </form>
-                        </div>
+                            <button
+                                type="submit"
+                                style={{
+                                    background: isBuy ? GREEN : RED,
+                                    color: "#fff", border: "none", borderRadius: "8px",
+                                    padding: "12px", fontWeight: 600, fontSize: "14px",
+                                    cursor: "pointer", transition: "opacity 0.15s",
+                                    fontFamily: "'Inter', system-ui, sans-serif"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                            >
+                                {isBuy ? "Buy" : "Sell"} {companySymbol}
+                            </button>
+                        </form>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 h-96">
-                    <h3 className="text-gray-400 text-xs font-bold uppercase mb-4 ml-2">Market Activity</h3>
-                    <ResponsiveContainer width="100%" height="90%">
+                {/* Right: chart */}
+                <div style={{ ...card, padding: "20px 24px" }}>
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: TEXT_SEC, margin: "0 0 16px 0" }}>Price Chart</p>
+                    <ResponsiveContainer width="100%" height={280}>
                         <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                            <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#999', fontSize: 12}} />
-                            <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{fill: '#999', fontSize: 12}} />
-                            <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={`${BORDER}80`} />
+                            <XAxis dataKey="time" axisLine={false} tickLine={false}
+                                tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }} />
+                            <YAxis domain={["auto", "auto"]} axisLine={false} tickLine={false}
+                                tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }} />
+                            <Tooltip
+                                contentStyle={{
+                                    background: SURFACE, border: `1px solid ${BORDER}`,
+                                    borderRadius: "8px", color: TEXT, fontSize: "13px",
+                                    fontFamily: "'Inter', sans-serif"
+                                }}
+                                labelStyle={{ color: TEXT_SEC }}
+                            />
                             <Line
-                                type="monotone"
-                                dataKey="price"
-                                stroke="#4F46E5"
-                                strokeWidth={4}
-                                dot={false}
-                                activeDot={{ r: 8, strokeWidth: 0 }}
+                                type="monotone" dataKey="price" stroke={INDIGO}
+                                strokeWidth={2} dot={false}
+                                activeDot={{ r: 4, strokeWidth: 0, fill: INDIGO_LT }}
                                 animationDuration={300}
                             />
                         </LineChart>
@@ -380,84 +405,89 @@ function CompanyPage() {
                 </div>
             </div>
 
-            {/* ── ORDER BOOK ── */}
-            <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
-                <div className="flex justify-between items-center mb-6 px-2">
-                    <h2 className="text-2xl font-bold text-indigo-900">Order Book</h2>
-                    <span className="text-xs text-gray-400 italic">Live market depth — click a row to pre-fill the order form</span>
+            {/* Order Book */}
+            <div style={{ ...card, padding: "24px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order Book</p>
+                    <span style={{ fontSize: "12px", color: TEXT_DIM }}>Click a row to pre-fill the order form</span>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    {/* ASKS (SELL offers — available to buy) */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+
+                    {/* Asks */}
                     <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            <h3 className="text-sm font-bold text-red-600 uppercase tracking-wider">Asks (Sell Orders)</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                            <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: RED }}></div>
+                            <span style={{ fontSize: "12px", fontWeight: 600, color: RED_LT }}>Asks (Sell Orders)</span>
                         </div>
-                        <table className="w-full text-sm">
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                             <thead>
-                                <tr className="text-left text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                    <th className="py-2 pr-4">Price</th>
-                                    <th className="py-2 pr-4 text-right">Shares</th>
-                                    <th className="py-2 text-center">Buy</th>
+                                <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                                    {["Price", "Shares", ""].map((h, i) => (
+                                        <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : i === 2 ? "center" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                                    ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody>
                                 {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0)
-                                  .sort((a, b) => a.price - b.price)
-                                  .map((ord, idx) => (
-                                    <tr key={idx} className="hover:bg-red-50 transition-colors cursor-pointer group"
-                                        onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
-                                        <td className="py-3 pr-4 font-mono font-bold text-red-600">
-                                            ${ord.price.toLocaleString()}
-                                        </td>
-                                        <td className="py-3 pr-4 text-right font-semibold text-gray-700">
-                                            {ord.shares.toLocaleString()}
-                                        </td>
-                                        <td className="py-3 text-center">
-                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full">BUY</span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                    .sort((a, b) => a.price - b.price)
+                                    .map((ord, idx) => (
+                                        <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
+                                            onMouseEnter={e => e.currentTarget.style.background = `${RED}08`}
+                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                            onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                            <td style={{ padding: "10px 12px", color: RED_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                                                ${ord.price.toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
+                                                {ord.shares.toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                                                <span className="buy-hint" style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${GREEN}18`, color: GREEN }}>BUY</span>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0).length === 0 && (
-                                    <tr><td colSpan="3" className="py-8 text-center text-gray-300 italic text-xs">No sell orders</td></tr>
+                                    <tr><td colSpan="3" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No sell orders</td></tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
 
-                    {/* BIDS (BUY offers) */}
+                    {/* Bids */}
                     <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            <h3 className="text-sm font-bold text-green-600 uppercase tracking-wider">Bids (Buy Orders)</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                            <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: GREEN }}></div>
+                            <span style={{ fontSize: "12px", fontWeight: 600, color: GREEN_LT }}>Bids (Buy Orders)</span>
                         </div>
-                        <table className="w-full text-sm">
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                             <thead>
-                                <tr className="text-left text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                    <th className="py-2 pr-4">Price</th>
-                                    <th className="py-2 pr-4 text-right">Shares</th>
-                                    <th className="py-2 text-center">Sell</th>
+                                <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                                    {["Price", "Shares", ""].map((h, i) => (
+                                        <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : i === 2 ? "center" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                                    ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody>
                                 {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0)
-                                  .sort((a, b) => b.price - a.price)
-                                  .map((ord, idx) => (
-                                    <tr key={idx} className="hover:bg-green-50 transition-colors cursor-pointer group"
-                                        onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
-                                        <td className="py-3 pr-4 font-mono font-bold text-green-600">
-                                            ${ord.price.toLocaleString()}
-                                        </td>
-                                        <td className="py-3 pr-4 text-right font-semibold text-gray-700">
-                                            {ord.shares.toLocaleString()}
-                                        </td>
-                                        <td className="py-3 text-center">
-                                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full">SELL</span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                    .sort((a, b) => b.price - a.price)
+                                    .map((ord, idx) => (
+                                        <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
+                                            onMouseEnter={e => e.currentTarget.style.background = `${GREEN}08`}
+                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                            onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                            <td style={{ padding: "10px 12px", color: GREEN_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                                                ${ord.price.toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
+                                                {ord.shares.toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${RED}18`, color: RED }}>SELL</span>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0).length === 0 && (
-                                    <tr><td colSpan="3" className="py-8 text-center text-gray-300 italic text-xs">No buy orders</td></tr>
+                                    <tr><td colSpan="3" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No buy orders</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -465,71 +495,90 @@ function CompanyPage() {
                 </div>
             </div>
 
-            {/* ── ALL ORDERS HISTORY ── */}
-            <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
-                <div className="flex justify-between items-center mb-6 px-2">
-                    <h2 className="text-2xl font-bold text-indigo-900">Order History</h2>
-                    <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">{o.length} Orders</span>
+            {/* Order History */}
+            <div style={{ ...card, padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order History</p>
+                    <span style={{ fontSize: "12px", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: `${INDIGO}18`, color: INDIGO_LT }}>
+                        {o.length} orders
+                    </span>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
+                <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                         <thead>
-                            <tr className="text-left text-gray-400 text-xs font-bold uppercase tracking-wider">
-                                <th className="px-6 py-3">ID</th>
-                                <th className="px-6 py-3">Type</th>
-                                <th className="px-6 py-3">Side</th>
-                                <th className="px-6 py-3 text-right">Qty</th>
-                                <th className="px-6 py-3 text-right">Price</th>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3 text-center">Action</th>
+                            <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                                {["Order ID", "Type", "Side", "Qty", "Price", "Status", "Action"].map((h, i) => (
+                                    <th key={i} style={{
+                                        padding: "10px 16px", textAlign: ["Qty", "Price"].includes(h) ? "right" : h === "Action" ? "center" : "left",
+                                        fontSize: "11px", fontWeight: 600, color: TEXT_DIM,
+                                        textTransform: "uppercase", letterSpacing: "0.06em"
+                                    }}>{h}</th>
+                                ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody>
                             {o.length > 0 ? (
                                 o.map((order, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-xs text-gray-500">{order.orderId}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-md text-[10px] font-black ${order.marketLimit ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    <tr key={idx}
+                                        style={{ borderBottom: `1px solid ${BORDER}30`, transition: "background 0.1s" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = `${SURFACE}80`}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: "11px", color: TEXT_DIM }}>
+                                            {order.orderId}
+                                        </td>
+                                        <td style={{ padding: "12px 16px" }}>
+                                            <span style={{
+                                                fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px",
+                                                ...(order.marketLimit
+                                                    ? { background: `${INDIGO}18`, color: INDIGO_LT }
+                                                    : { background: `${TEXT_DIM}18`, color: TEXT_SEC })
+                                            }}>
                                                 {order.marketLimit ? "MARKET" : "LIMIT"}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`font-bold ${order.buySell ? 'text-green-600' : 'text-red-600'}`}>
-                                                {order.buySell ? "BUY" : "SELL"}
-                                            </span>
+                                        <td style={{ padding: "12px 16px", fontWeight: 600, color: order.buySell ? GREEN_LT : RED_LT }}>
+                                            {order.buySell ? "BUY" : "SELL"}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex flex-col items-end">
-                                                <span className="font-bold text-gray-900">
-                                                    {order.initialShares ? (
-                                                        <>
-                                                            {order.initialShares - order.shares}
-                                                            <span className="text-gray-400 font-normal mx-1">/</span>
-                                                            {order.initialShares}
-                                                        </>
-                                                    ) : (
-                                                        order.shares > 0 ? order.shares : <span className="text-gray-400 font-normal italic">--</span>
-                                                    )}
+                                        <td style={{ padding: "12px 16px", textAlign: "right", color: TEXT, fontVariantNumeric: "tabular-nums" }}>
+                                            {order.initialShares ? (
+                                                <span>
+                                                    <span style={{ color: TEXT }}>{order.initialShares - order.shares}</span>
+                                                    <span style={{ color: TEXT_DIM }}> / {order.initialShares}</span>
                                                 </span>
-                                            </div>
+                                            ) : (
+                                                order.shares > 0 ? order.shares : <span style={{ color: TEXT_DIM, fontStyle: "italic" }}>--</span>
+                                            )}
                                         </td>
-                                        <td className="px-6 py-4 text-right font-mono text-indigo-600">
+                                        <td style={{ padding: "12px 16px", textAlign: "right", color: TEXT, fontVariantNumeric: "tabular-nums" }}>
                                             {order.finalPrice ? `$${order.finalPrice.toLocaleString()}` : order.price ? `$${order.price.toLocaleString()}` : "-"}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${order.status ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                                                <span className={`text-sm font-medium ${order.status ? 'text-green-700' : 'text-yellow-700'}`}>
-                                                    {order.status === true ? "Executed" : "Pending"}
+                                        <td style={{ padding: "12px 16px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                                                <div style={{
+                                                    width: "7px", height: "7px", borderRadius: "50%",
+                                                    background: order.status ? GREEN : order.fillStatus === "PARTIALLY_FILLED" ? INDIGO : TEXT_DIM
+                                                }}></div>
+                                                <span style={{
+                                                    fontSize: "12px", fontWeight: 500,
+                                                    color: order.status ? GREEN_LT : order.fillStatus === "PARTIALLY_FILLED" ? INDIGO_LT : TEXT_SEC
+                                                }}>
+                                                    {order.fillStatus || (order.status ? "Filled" : "Pending")}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-center">
+                                        <td style={{ padding: "12px 16px", textAlign: "center" }}>
                                             {!order.status && (
-                                                <button 
+                                                <button
                                                     onClick={() => handleCancelOrder(order.orderId)}
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 font-bold text-xs p-2 rounded-lg transition-all"
+                                                    style={{
+                                                        background: "none", border: `1px solid ${RED}40`,
+                                                        color: RED_LT, cursor: "pointer", fontSize: "12px",
+                                                        fontWeight: 500, padding: "4px 12px", borderRadius: "6px",
+                                                        transition: "background 0.15s",
+                                                        fontFamily: "'Inter', system-ui, sans-serif"
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = `${RED}15`}
+                                                    onMouseLeave={e => e.currentTarget.style.background = "none"}
                                                 >
                                                     Cancel
                                                 </button>
@@ -539,7 +588,7 @@ function CompanyPage() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="7" className="text-center py-12 text-gray-400 italic">
+                                    <td colSpan="7" style={{ textAlign: "center", padding: "40px", fontSize: "13px", color: TEXT_DIM, fontStyle: "italic" }}>
                                         No orders yet
                                     </td>
                                 </tr>

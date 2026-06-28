@@ -17,8 +17,8 @@ public class EngineController {
     // Frontend sends to /app/placeOrder
     @MessageMapping("/placeOrder")
     public void sendOrder(@Payload OrderDTO1 request) {
-        engineService.placeOrder(request.isBuySell(), request.getPrice(), request.getShares(),
-                request.isMarketLimit(), request.getCompanyId());
+        engineService.placeOrder(request.getBuySell(), request.getPrice(), request.getShares(),
+                request.getMarketLimit(), request.getCompanyId());
     }
 
     // Frontend sends to /app/cancelOrder

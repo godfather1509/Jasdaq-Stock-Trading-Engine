@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -21,6 +22,14 @@ import com.tradingSystem.Jasdaq.Engine.net.MulticastBroadcaster;
 
 @Service
 public class EngineService {
+
+    private static final long STATS_CACHE_TTL_MS = 5_000;
+    private static final long BROADCAST_MIN_INTERVAL_MS = 200;
+
+    private volatile Map<String, Object> cachedStats = null;
+    private volatile long statsCachedAt = 0;
+
+    private final AtomicLong lastStatsBroadcastAt = new AtomicLong(0);
 
     @Autowired
     private CompanyService companyService;
@@ -68,6 +77,15 @@ public class EngineService {
                 return;
             }
 
+            if (result == null) {
+                String side = buySell ? "BUY" : "SELL";
+                String opposite = buySell ? "SELL" : "BUY";
+                String reason = side + " market order rejected: no " + opposite
+                        + " orders available in the book to match against. Try placing a LIMIT order instead.";
+                broadcastRejection(companyId, null, reason);
+                return;
+            }
+
             if (result instanceof TradeResults tradeResults) {
                 List<Trade> list = tradeResults.list();
                 Order order = tradeResults.order();
@@ -83,9 +101,12 @@ public class EngineService {
                     return;
                 }
 
-                // 1. Update current price in DB
+                // 1. Update current price in DB only when a real trade occurred
                 long executedPrice = order.getFinalPrice() > 0 ? order.getFinalPrice() : order.getPrice();
-                companyService.setCurrentPrice(executedPrice, companyId);
+                boolean tradeOccurred = list != null && !list.isEmpty();
+                if (tradeOccurred) {
+                    companyService.setCurrentPrice(executedPrice, companyId);
+                }
 
                 // 2. Persist order + trades directly to DB
                 Companies company = companyService.getCompanyById(companyId);
@@ -112,15 +133,16 @@ public class EngineService {
                 // 3. Send WebSocket confirmation to ALL subscribers
                 wsTemplate.convertAndSend("/topic/orders", order);
 
-                // 4. Broadcast global market stats and price update
-                broadcastMarketStats();
-                
-                Map<String, Object> update = Map.of(
-                    "companyId", companyId,
-                    "price", executedPrice,
-                    "timestamp", System.currentTimeMillis()
-                );
-                wsTemplate.convertAndSend("/topic/market-updates", update);
+                // 4. Broadcast global market stats and price update only on real trades
+                if (tradeOccurred) {
+                    broadcastMarketStats();
+                    Map<String, Object> update = Map.of(
+                        "companyId", companyId,
+                        "price", executedPrice,
+                        "timestamp", System.currentTimeMillis()
+                    );
+                    wsTemplate.convertAndSend("/topic/market-updates", update);
+                }
 
                 // 5. Best-effort multicast broadcast
                 try {
@@ -164,21 +186,33 @@ public class EngineService {
     }
 
     public Map<String, Object> getGlobalMarketStats() {
+        long now = System.currentTimeMillis();
+        if (cachedStats != null && (now - statsCachedAt) < STATS_CACHE_TTL_MS) {
+            return cachedStats;
+        }
         Long totalVolume = tradeRepository.getTotalVolume();
         Double avgLatency = orderRepository.getAverageLatency();
-
-        System.out.println("[DEBUG] Global Stats - Volume: " + totalVolume + ", Latency: " + avgLatency);
-
         Map<String, Object> stats = new HashMap<>();
         stats.put("marketStatus", "Operational");
         stats.put("totalVolume", totalVolume != null ? totalVolume : 0L);
         stats.put("avgLatency", avgLatency != null ? avgLatency : 0.0);
-        stats.put("timestamp", System.currentTimeMillis());
+        stats.put("timestamp", now);
+        cachedStats = stats;
+        statsCachedAt = now;
         return stats;
     }
 
     private void broadcastMarketStats() {
+        long now = System.currentTimeMillis();
+        long last = lastStatsBroadcastAt.get();
+        if (now - last < BROADCAST_MIN_INTERVAL_MS) {
+            return;
+        }
+        if (!lastStatsBroadcastAt.compareAndSet(last, now)) {
+            return;
+        }
         try {
+            cachedStats = null; // invalidate cache so broadcast always sends fresh data
             wsTemplate.convertAndSend("/topic/market-stats", getGlobalMarketStats());
         } catch (Exception e) {
             System.err.println("[WARN] Failed to broadcast global market stats: " + e.getMessage());
