@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import api from "../../api/apiConfig";
@@ -50,6 +50,13 @@ function CompanyPage() {
     const toastCounterRef = useRef(0);
     const pendingOrderRef = useRef(null);
 
+    const fetchMetrics = useCallback(async () => {
+        try {
+            const res = await api.get(`${companyId}/metrics`);
+            setMetrics(res.data);
+        } catch (err) { console.warn("Failed to fetch metrics", err); }
+    }, [companyId]);
+
     const showToast = (reason, type = "error") => {
         const id = ++toastCounterRef.current;
         setToasts(prev => [...prev, { id, reason, type }]);
@@ -87,11 +94,15 @@ function CompanyPage() {
                     if (exists) return prev.map(item => item.orderId === updatedOrder.orderId ? updatedOrder : item);
                     return [updatedOrder, ...prev];
                 });
+                // Bid/ask volumes change whenever an order is added, matched, or cancelled —
+                // re-fetch immediately instead of waiting for the next 3-second poll.
+                fetchMetrics();
             });
 
             client.subscribe("/topic/cancel", (msg) => {
                 const canceledOrder = JSON.parse(msg.body);
                 setO(prev => prev.filter(item => item.orderId !== canceledOrder.orderId));
+                fetchMetrics();
             });
 
             client.subscribe("/topic/order-rejected", (msg) => {
@@ -101,7 +112,7 @@ function CompanyPage() {
         });
 
         return () => { if (stompClient.current) stompClient.current.disconnect(); };
-    }, [companyId]);
+    }, [companyId, fetchMetrics]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -110,14 +121,18 @@ function CompanyPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const qty = parseInt(form.quantity);
+        const px  = parseInt(form.price) || 0;
+        if (!qty || qty < 1) { showToast("Quantity must be at least 1.", "error"); return; }
+        if (form.type === "limit" && px < 1) { showToast("Limit price must be at least 1.", "error"); return; }
         if (stompClient.current && stompClient.current.connected) {
             const isMkt = form.type === "market";
             const orderPayload = {
                 symbol: companySymbol,
                 buySell: form.side === "buy",
                 marketLimit: isMkt,
-                shares: parseInt(form.quantity),
-                price: isMkt ? 0 : parseInt(form.price),
+                shares: qty,
+                price: isMkt ? 0 : px,
                 companyId
             };
             if (isMkt) {
@@ -148,7 +163,6 @@ function CompanyPage() {
                 const res = await api.get(companyId);
                 if (res.data) {
                     setC(res.data);
-                    setO(res.data.orders || []);
                     if (chartData.length === 0 && res.data.currentPrice) {
                         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         setChartData([{ time, price: res.data.currentPrice }]);
@@ -157,11 +171,11 @@ function CompanyPage() {
             } catch (err) { console.error(err); }
         };
 
-        const fetchMetrics = async () => {
+        const fetchOrders = async () => {
             try {
-                const res = await api.get(`${companyId}/metrics`);
-                setMetrics(res.data);
-            } catch (err) { console.warn("Failed to fetch metrics", err); }
+                const res = await api.get(`${companyId}/orders`);
+                if (Array.isArray(res.data)) setO(res.data);
+            } catch (err) { console.warn("Failed to fetch orders", err); }
         };
 
         const fetchTrades = async () => {
@@ -179,6 +193,7 @@ function CompanyPage() {
         };
 
         fetchCompany();
+        fetchOrders();
         fetchMetrics();
         fetchTrades();
         const interval = setInterval(fetchMetrics, 3000);
@@ -247,10 +262,11 @@ function CompanyPage() {
                     </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "0 0 4px 0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Current Price</p>
+                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "0 0 4px 0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Market Price</p>
                     <p style={{ fontSize: "28px", fontWeight: 700, color: GREEN, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                        ${c.currentPrice?.toLocaleString()}
+                        ₹{c.currentPrice?.toLocaleString()}
                     </p>
+                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "3px 0 0 0" }}>per share</p>
                 </div>
             </div>
 
@@ -330,6 +346,11 @@ function CompanyPage() {
                                     <option value="market">Market</option>
                                     <option value="limit">Limit</option>
                                 </select>
+                                <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "6px 0 0 0", lineHeight: 1.5 }}>
+                                    {form.type === "market"
+                                        ? "Executes immediately at the best available price. No price guarantee."
+                                        : "Executes only at your specified price or better. Stays in the book until matched."}
+                                </p>
                             </div>
 
                             <div>
@@ -337,6 +358,7 @@ function CompanyPage() {
                                 <input
                                     type="number" name="quantity" value={form.quantity}
                                     onChange={handleChange} placeholder="0"
+                                    min="1" step="1"
                                     style={inputStyle}
                                     onFocus={e => e.target.style.borderColor = INDIGO}
                                     onBlur={e => e.target.style.borderColor = BORDER}
@@ -346,10 +368,11 @@ function CompanyPage() {
 
                             {form.type === "limit" && (
                                 <div>
-                                    <label style={label}>Limit Price</label>
+                                    <label style={label}>Limit Price <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(per share)</span></label>
                                     <input
                                         type="number" name="price" value={form.price}
                                         onChange={handleChange} placeholder="0"
+                                        min="1" step="1"
                                         style={inputStyle}
                                         onFocus={e => e.target.style.borderColor = INDIGO}
                                         onBlur={e => e.target.style.borderColor = BORDER}
@@ -436,7 +459,7 @@ function CompanyPage() {
                                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                             onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
                                             <td style={{ padding: "10px 12px", color: RED_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                                                ${ord.price.toLocaleString()}
+                                                ₹{ord.price.toLocaleString()}
                                             </td>
                                             <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
                                                 {ord.shares.toLocaleString()}
@@ -476,7 +499,7 @@ function CompanyPage() {
                                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                             onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
                                             <td style={{ padding: "10px 12px", color: GREEN_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                                                ${ord.price.toLocaleString()}
+                                                ₹{ord.price.toLocaleString()}
                                             </td>
                                             <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
                                                 {ord.shares.toLocaleString()}
@@ -550,7 +573,7 @@ function CompanyPage() {
                                             )}
                                         </td>
                                         <td style={{ padding: "12px 16px", textAlign: "right", color: TEXT, fontVariantNumeric: "tabular-nums" }}>
-                                            {order.finalPrice ? `$${order.finalPrice.toLocaleString()}` : order.price ? `$${order.price.toLocaleString()}` : "-"}
+                                            {order.finalPrice ? `₹${order.finalPrice.toLocaleString()}` : order.price ? `₹${order.price.toLocaleString()}` : "-"}
                                         </td>
                                         <td style={{ padding: "12px 16px" }}>
                                             <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
@@ -567,7 +590,7 @@ function CompanyPage() {
                                             </div>
                                         </td>
                                         <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                                            {!order.status && (
+                                            {!order.status && !order.companyOrder && (
                                                 <button
                                                     onClick={() => handleCancelOrder(order.orderId)}
                                                     style={{

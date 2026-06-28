@@ -35,17 +35,19 @@ public class TradeEngine{
         boolean marketLimit; // market= true, limit= false
         int shares; // no of shares
         long price; // price per share
+        boolean isCompanyOrder;
         Type reqType;
         String cancelOrderId;
         final CompletableFuture<Object> future;
 
-        public Request(String orderId, boolean buySell, long price, int shares, boolean marketLimit, Type reqType) {
+        public Request(String orderId, boolean buySell, long price, int shares, boolean marketLimit, Type reqType, boolean isCompanyOrder) {
             // constructor for add order
             this.orderId = orderId;
             this.buySell = buySell;
             this.marketLimit = marketLimit;
             this.shares = shares;
             this.price = price;
+            this.isCompanyOrder = isCompanyOrder;
             this.reqType=reqType; // addOrder request, cancelOrder request and displayBook request
             this.future=new CompletableFuture<>();
         }
@@ -64,11 +66,11 @@ public class TradeEngine{
         }
     }
 
-    public CompletableFuture<Object> submitAddRequest(boolean buySell, long price, int shares, boolean marketLimit){
+    public CompletableFuture<Object> submitAddRequest(boolean buySell, long price, int shares, boolean marketLimit, boolean isCompanyOrder){
 
         // this function will add order
         String orderId=IdGenerator.nextID(symbol,'o'); // get order id
-        Request req=new Request(orderId, buySell, price, shares, marketLimit, Type.addRequest);
+        Request req=new Request(orderId, buySell, price, shares, marketLimit, Type.addRequest, isCompanyOrder);
         SingleThreadQueue.add(req); // add request in queue
         return req.future;
     }
@@ -109,7 +111,7 @@ public class TradeEngine{
                 try {
                     switch (req.reqType) {
                         case addRequest:
-                            trades=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price,  req.shares);
+                            trades=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price, req.shares, req.isCompanyOrder);
                             req.future.complete(trades);
                             break;
 

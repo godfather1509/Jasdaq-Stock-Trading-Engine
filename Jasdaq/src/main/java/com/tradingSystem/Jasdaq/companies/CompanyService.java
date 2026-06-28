@@ -81,7 +81,7 @@ public class CompanyService {
         companyMap.put(company.getSymbol(), company);
         companyRepository.save(company);
         eventPublisher.publishEvent(new PlaceOrderEvent(this, false, company.getCurrentPrice(),
-                company.getTotalShares(), false, company.getCompanyId()));
+                company.getTotalShares(), false, company.getCompanyId(), true));
         return company;
     }
 
@@ -108,5 +108,28 @@ public class CompanyService {
         return companyMap.get(symbol);
     }
 
-    // Share-pool management removed: shares are enforced organically by the initial IPO Order.
+    /**
+     * Atomically reserves shares for an incoming user SELL order.
+     * Returns true if the user pool had enough shares; false (reject the order) if not.
+     */
+    @Transactional
+    public boolean reserveSharesForSell(String companyId, int qty) {
+        return companyRepository.decrementAvailableShares(companyId, qty) > 0;
+    }
+
+    /**
+     * Returns shares to the user pool when a SELL order is canceled.
+     */
+    @Transactional
+    public void releaseSharesFromSell(String companyId, int qty) {
+        companyRepository.incrementAvailableShares(companyId, qty);
+    }
+
+    /**
+     * Credits shares to the user pool after a BUY order fills (shares enter user hands).
+     */
+    @Transactional
+    public void creditBuyShares(String companyId, int qty) {
+        companyRepository.incrementAvailableShares(companyId, qty);
+    }
 }

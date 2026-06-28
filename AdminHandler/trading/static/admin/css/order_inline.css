@@ -1,0 +1,15 @@
+/* Hide the per-row "APL | SELL LIMIT | 100 @ 10  Change" header Django renders
+   above each inline object when show_change_link = True */
+tr.has_original {
+    display: none;
+}
+
+/* Style the change icon link in the last column */
+.inline-changelink {
+    font-size: 16px;
+    text-decoration: none;
+    color: #447e9b;
+}
+.inline-changelink:hover {
+    color: #2a5a7a;
+}

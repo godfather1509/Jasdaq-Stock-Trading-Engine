@@ -31,6 +31,9 @@ public class CompanyController {
     private com.tradingSystem.Jasdaq.Engine.TradeRepository tradeRepository;
 
     @Autowired
+    private com.tradingSystem.Jasdaq.Engine.OrderRepository orderRepository;
+
+    @Autowired
     private com.tradingSystem.Jasdaq.Engine.EngineService engineService;
 
     @Autowired
@@ -62,6 +65,14 @@ public class CompanyController {
                 });
     }
 
+    @GetMapping("/{id}/orders")
+    public ResponseEntity<?> getOrdersByCompany(@PathVariable String id) {
+        return companyService.singleCompany(id)
+                .map(company -> ResponseEntity.ok(
+                        orderRepository.findBySymbolOrderByEntryTimeDesc(company.getSymbol())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}/trades")
     public ResponseEntity<Page<com.tradingSystem.Jasdaq.Engine.Trade>> getTrades(
             @PathVariable String id,
@@ -91,19 +102,17 @@ public class CompanyController {
                 company.setCompanyId(symbol + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
             }
 
-            if (company.getAvailableShares() == 0) {
-                company.setAvailableShares(company.getTotalShares());
-            }
+            // availableShares tracks shares owned by users — starts at 0 (no one owns shares at IPO)
+            company.setAvailableShares(0);
             if (company.getCurrentPrice() == 0) {
                 company.setCurrentPrice(company.getInitialPrice());
             }
-            
+
             Companies saved = companyService.registerCompany(company);
 
-            // Automatically place an IPO SELL order for the entire totalShares pool at the initial price.
-            // This ensures that the exact number of issued shares are available on the market for trading.
+            // Place an IPO SELL order for the full share pool. Marked isIpo=true so it skips the ownership check.
             eventPublisher.publishEvent(new PlaceOrderEvent(this, false, saved.getInitialPrice(),
-                    saved.getTotalShares(), false, saved.getCompanyId()));
+                    saved.getTotalShares(), false, saved.getCompanyId(), true));
 
             return ResponseEntity.ok(Map.of(
                     "status", "ok",
@@ -123,7 +132,7 @@ public class CompanyController {
     public ResponseEntity<Map<String, Object>> placeOrderRest(@RequestBody OrderDTO1 request) {
         try {
             engineService.placeOrder(request.getBuySell(), request.getPrice(), request.getShares(),
-                    request.getMarketLimit(), request.getCompanyId());
+                    request.getMarketLimit(), request.getCompanyId(), false, true);
             return ResponseEntity.ok(Map.of("status", "ok", "message", "Order placed successfully in Engine"));
         } catch (Exception e) {
             e.printStackTrace();

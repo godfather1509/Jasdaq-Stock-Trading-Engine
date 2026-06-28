@@ -105,11 +105,16 @@ public class MatchingEngine {
         return new MarketMetrics(totalBuyShares, totalSellShares, bl, sl, bm, sm, currentPrice);
     }
 
-    public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares) {
+    public Order getOrder(String orderId) {
+        return orderMap.get(orderId);
+    }
+
+    public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares, boolean isCompanyOrder) {
         if (!orderMap.containsKey(orderId)) {
             list.clear(); // FIX: Clear trades from previous operations
             long entryTime = System.currentTimeMillis(); // get time when order is placed
             order = new Order(orderId, symbol, buySell, price, shares, entryTime, marketLimit);
+            order.companyOrder = isCompanyOrder;
             if (marketLimit) {
                 // if it is a market order
                 OrderWrapper wrap = executeMarketOrder(order);

@@ -53,6 +53,10 @@ public class Order {
     public long eventTime;
     public long finalPrice;
 
+    /** True for system-placed orders (IPO, relisting, admin). Cannot be cancelled from the frontend. */
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    public boolean companyOrder = false;
+
     @Transient
     @JsonIgnore
     public Order nextOrder;
@@ -69,7 +73,7 @@ public class Order {
     }
 
     @ManyToOne
-    @JoinColumn(name = "companyId", nullable = true)
+    @JoinColumn(name = "company_id", nullable = true)
     @JsonBackReference
     private Companies company;
 

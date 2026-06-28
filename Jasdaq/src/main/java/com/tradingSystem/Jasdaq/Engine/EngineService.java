@@ -52,32 +52,51 @@ public class EngineService {
     @EventListener
     public void handleEvent(PlaceOrderEvent event) {
         placeOrder(event.getBuySell(), event.getPrice(), event.getShares(), event.getMarketLimit(),
-                event.getCompanyId());
+                event.getCompanyId(), event.isIpo());
     }
 
     public void placeOrder(boolean buySell, long price, int shares, boolean marketLimit, String companyId) {
+        placeOrder(buySell, price, shares, marketLimit, companyId, false, false);
+    }
 
-        // Share reservation logic removed: shares are enforced by an initial IPO SELL order.
+    public void placeOrder(boolean buySell, long price, int shares, boolean marketLimit, String companyId, boolean isIpo) {
+        placeOrder(buySell, price, shares, marketLimit, companyId, isIpo, false);
+    }
+
+    public void placeOrder(boolean buySell, long price, int shares, boolean marketLimit, String companyId, boolean isIpo, boolean isCompanyOrder) {
+        boolean treatAsCompany = isIpo || isCompanyOrder;
+
+        // User SELL orders are only allowed if the user pool has enough shares.
+        // Company/IPO SELL orders bypass this check — they represent supply, not user-owned shares.
+        if (!buySell && !treatAsCompany) {
+            if (!companyService.reserveSharesForSell(companyId, shares)) {
+                broadcastRejection(companyId, null,
+                        "Sell order rejected: you cannot sell shares you do not own. " +
+                        "Buy shares first before placing a sell order.");
+                return;
+            }
+        }
 
         TradeEngine engine = companyService.getTradeEngine(companyId);
         if (engine == null) {
-            // Release reservation removed
+            if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
             System.err.println("[ERROR] No TradeEngine found for companyId=" + companyId);
             broadcastRejection(companyId, null, "Trading engine not initialized for this company. Please restart the server.");
             return;
         }
 
-        CompletableFuture<Object> obj = engine.submitAddRequest(buySell, price, shares, marketLimit);
+        CompletableFuture<Object> obj = engine.submitAddRequest(buySell, price, shares, marketLimit, treatAsCompany);
 
         obj.whenComplete((result, throwables) -> {
             if (throwables != null) {
                 throwables.printStackTrace();
-                // Release reservation removed
+                if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
                 broadcastRejection(companyId, null, "Internal engine error: " + throwables.getMessage());
                 return;
             }
 
             if (result == null) {
+                if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
                 String side = buySell ? "BUY" : "SELL";
                 String opposite = buySell ? "SELL" : "BUY";
                 String reason = side + " market order rejected: no " + opposite
@@ -91,12 +110,12 @@ public class EngineService {
                 Order order = tradeResults.order();
 
                 if (order == null) {
+                    if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
                     String side = buySell ? "BUY" : "SELL";
                     String opposite = buySell ? "SELL" : "BUY";
                     String reason = side + " market order rejected: no " + opposite
                             + " orders available in the book to match against. Try placing a LIMIT order instead.";
                     System.err.println("[WARN] " + reason);
-                    // Release reservation removed
                     broadcastRejection(companyId, null, reason);
                     return;
                 }
@@ -106,6 +125,11 @@ public class EngineService {
                 boolean tradeOccurred = list != null && !list.isEmpty();
                 if (tradeOccurred) {
                     companyService.setCurrentPrice(executedPrice, companyId);
+                    // Credit the buyer's shares into the user ownership pool
+                    if (buySell) {
+                        int tradedQty = list.stream().mapToInt(Trade::getQuantity).sum();
+                        companyService.creditBuyShares(companyId, tradedQty);
+                    }
                 }
 
                 // 2. Persist order + trades directly to DB
@@ -162,6 +186,14 @@ public class EngineService {
             System.err.println("[ERROR] No TradeEngine found for cancelOrder, companyId=" + companyId);
             return;
         }
+
+        // Block cancellation of company orders (IPO, relisting, admin-placed)
+        Order existing = engine.lob.getOrder(orderId);
+        if (existing != null && existing.companyOrder) {
+            broadcastRejection(companyId, null,
+                    "Company orders (IPO, relisting, etc.) cannot be cancelled.");
+            return;
+        }
         CompletableFuture<Object> obj = engine.submitCancelrequest(orderId);
 
         obj.whenComplete((result, throwables) -> {
@@ -171,7 +203,10 @@ public class EngineService {
             }
             if (result instanceof Order order) {
                 wsTemplate.convertAndSend("/topic/orders", order);
-                // Release shares logic removed
+                // Return the remaining reserved shares to the user ownership pool
+                if (!order.buySell) {
+                    companyService.releaseSharesFromSell(companyId, order.shares);
+                }
                 deleteFromDatabaseAsync(order);
             }
         });

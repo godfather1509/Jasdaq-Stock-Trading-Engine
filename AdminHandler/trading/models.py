@@ -38,7 +38,9 @@ class Order(models.Model):
     price        = models.BigIntegerField()
     entry_time   = models.BigIntegerField(db_column='entry_time')
     event_time   = models.BigIntegerField(db_column='event_time', null=True, blank=True)
-    final_price  = models.BigIntegerField(db_column='final_price', null=True, blank=True)
+    final_price   = models.BigIntegerField(db_column='final_price', null=True, blank=True)
+    company_order = models.BooleanField(db_column='company_order', default=False,
+                                        help_text='True for system-placed orders (IPO, relisting, admin). Cannot be cancelled from the frontend.')
     company      = models.ForeignKey(
         Company,
         on_delete=models.SET_NULL,
@@ -55,8 +57,12 @@ class Order(models.Model):
         verbose_name_plural = 'Orders'
 
     def __str__(self):
-        side = "BUY" if self.buy_sell else "SELL"
-        return f"{self.order_id} | {self.symbol} | {side}"
+        val = self.buy_sell
+        is_buy = val == b'\x01' or val is True or val == 1
+        side = "BUY" if is_buy else "SELL"
+        val_ml = self.market_limit
+        order_type = "MARKET" if (val_ml == b'\x01' or val_ml is True or val_ml == 1) else "LIMIT"
+        return f"{self.symbol} | {side} {order_type} | {self.shares} @ {self.price}"
 
 
 class Trade(models.Model):

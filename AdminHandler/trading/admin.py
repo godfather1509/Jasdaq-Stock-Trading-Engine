@@ -3,6 +3,9 @@ import requests
 from django import forms
 from django.db import transaction
 from django.contrib import admin, messages
+from django.forms import BaseInlineFormSet
+from django.urls import reverse
+from django.utils.html import format_html
 from .models import Company, Order, Trade
 
 
@@ -17,10 +20,16 @@ class CompanyCreationForm(forms.ModelForm):
     class Meta:
         model = Company
         fields = ('symbol', 'name', 'total_shares', 'initial_price')
+        labels = {
+            'initial_price': 'Total Company Valuation',
+        }
         help_texts = {
             'symbol': 'Ticker symbol (e.g. AAPL). Must be unique.',
-            'total_shares': 'Total number of shares authorised for trading. Cannot be changed after creation.',
-            'initial_price': 'Starting price in smallest currency unit (e.g. paise / cents). E.g. 15000 = ₹150.00.',
+            'total_shares': 'Total number of shares to issue at IPO.',
+            'initial_price': (
+                'Total company value at IPO (e.g. enter 1500000 for a ₹15,00,000 valuation). '
+                'Per-share IPO price is calculated automatically as Valuation ÷ Total Shares.'
+            ),
         }
 
     def clean_symbol(self):
@@ -35,7 +44,7 @@ class CompanyCreationForm(forms.ModelForm):
     def clean_initial_price(self):
         val = self.cleaned_data['initial_price']
         if val <= 0:
-            raise forms.ValidationError("Initial price must be greater than zero.")
+            raise forms.ValidationError("Total company valuation must be greater than zero.")
         return val
 
 
@@ -82,13 +91,46 @@ class OrderCreationForm(forms.ModelForm):
 
 # ─── Inlines ────────────────────────────────────────────────────────────────
 
+class OrderBySymbolFormSet(BaseInlineFormSet):
+    """Filter orders by symbol instead of the company FK.
+
+    BaseInlineFormSet.__init__ sets self.queryset via FK filter (company_id=pk), which
+    yields 0 rows when company_id is NULL. We replace self.queryset in __init__ — after
+    the parent runs — so that both initial_form_count() and get_queryset() use the
+    symbol-based queryset, which Spring Boot always populates.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.queryset = Order.objects.filter(
+                symbol=self.instance.symbol
+            ).order_by('-entry_time')
+            if hasattr(self, '_queryset'):
+                del self._queryset
+
+
+class TradeBySymbolFormSet(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.queryset = Trade.objects.filter(
+                symbol=self.instance.symbol
+            ).order_by('-trade_time')
+            if hasattr(self, '_queryset'):
+                del self._queryset
+
+
 class OrderInline(admin.TabularInline):
     model = Order
-    fields = ('order_id', 'symbol', 'side_label', 'type_label', 'status_label', 'shares', 'initial_shares', 'price', 'entry_time')
+    formset = OrderBySymbolFormSet
+    fields = ('side_label', 'type_label', 'status_label', 'shares', 'initial_shares', 'price', 'entry_time', 'edit_link')
     readonly_fields = fields
     can_delete = False
     extra = 0
-    show_change_link = True
+    show_change_link = True  # gives tr.has_original class so CSS can hide the header row
+
+    class Media:
+        css = {'all': ('admin/css/order_inline.css',)}
 
     def side_label(self, obj):
         val = obj.buy_sell
@@ -108,9 +150,17 @@ class OrderInline(admin.TabularInline):
         return 'Filled' if is_true else 'Pending'
     status_label.short_description = 'Status'
 
+    def edit_link(self, obj):
+        if not obj.pk:
+            return ''
+        url = reverse('admin:trading_order_change', args=[obj.pk])
+        return format_html('<a href="{}" class="inline-changelink" title="View/Edit">✎</a>', url)
+    edit_link.short_description = ''
+
 
 class TradeInline(admin.TabularInline):
     model = Trade
+    formset = TradeBySymbolFormSet
     readonly_fields = ('trade_id', 'symbol', 'quantity', 'price', 'buy_order_id', 'sell_order_id', 'trade_time')
     can_delete = False
     extra = 0
@@ -127,25 +177,21 @@ class CompanyAdmin(admin.ModelAdmin):
     ordering      = ('symbol',)
     inlines       = [OrderInline, TradeInline]
 
-    # Fields shown when EDITING an existing company
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
             return ()
-        return ('company_id', 'symbol', 'name', 'total_shares', 'initial_price',
-                'current_price', 'available_shares')
+        # company_id is the PK — never editable
+        # current_price and available_shares are managed by the trading engine
+        return ('company_id', 'current_price', 'available_shares')
 
     def get_form(self, request, obj=None, **kwargs):
-        """Use a simplified creation form for new companies."""
         if obj is None:
-            # Creating a new company
             kwargs['form'] = CompanyCreationForm
         return super().get_form(request, obj, **kwargs)
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            # Show only editable creation fields
             return ('symbol', 'name', 'total_shares', 'initial_price')
-        # Show all fields (all read-only) for existing companies
         return ('company_id', 'symbol', 'name', 'initial_price', 'current_price',
                 'total_shares', 'available_shares')
 
@@ -161,8 +207,13 @@ class CompanyAdmin(admin.ModelAdmin):
             # Generate a unique company ID (same format as Spring Boot IdGenerator)
             symbol = obj.symbol.upper()
             obj.company_id = f"{symbol}-{uuid.uuid4().hex[:8].upper()}"
-            obj.available_shares = obj.total_shares
+
+            # Convert total company valuation → per-share IPO price
+            obj.initial_price = obj.initial_price // obj.total_shares
             obj.current_price = obj.initial_price
+
+            # Users own 0 shares at IPO — increments as BUY orders are filled
+            obj.available_shares = 0
 
         # Save to the shared MySQL database
         super().save_model(request, obj, form, change)
@@ -174,8 +225,8 @@ class CompanyAdmin(admin.ModelAdmin):
                 "symbol":          obj.symbol,
                 "name":            obj.name,
                 "totalShares":     obj.total_shares,
-                "availableShares": obj.available_shares,
-                "initialPrice":    obj.initial_price,
+                "availableShares": 0,
+                "initialPrice":    obj.initial_price,   # already per-share at this point
                 "currentPrice":    obj.current_price,
             }
 
@@ -194,8 +245,16 @@ class CompanyAdmin(admin.ModelAdmin):
             messages.success(
                 request,
                 f"✅ Company '{obj.symbol}' registered. "
-                f"Total shares: {obj.total_shares:,} | Price: {obj.initial_price}"
+                f"Total shares: {obj.total_shares:,} | IPO price per share: {obj.initial_price:,}"
             )
+        else:
+            messages.success(request, f"✅ Company '{obj.symbol}' updated successfully.")
+            if 'symbol' in form.changed_data:
+                messages.warning(
+                    request,
+                    "⚠️ Symbol was changed. Existing open orders still reference the old symbol — "
+                    "restart the trading engine to reload the order book for this company."
+                )
 
     def has_delete_permission(self, request, obj=None):
         # Prevent accidental deletion of companies that have active orders
@@ -208,7 +267,7 @@ class CompanyAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display  = ('order_id', 'symbol', 'side', 'order_type', 'status_label',
                      'shares', 'initial_shares', 'price', 'entry_time')
-    list_filter   = ('buy_sell', 'market_limit', 'status', 'symbol')
+    list_filter   = ('symbol',)
     search_fields = ('order_id', 'symbol')
     ordering      = ('-entry_time',)
 
@@ -238,8 +297,11 @@ class OrderAdmin(admin.ModelAdmin):
     def get_fields(self, request, obj=None):
         if obj is None:
             return ('company', 'buy_sell', 'market_limit', 'shares', 'price')
-        return ('order_id', 'symbol', 'company', 'buy_sell', 'market_limit', 'status', 'shares', 'price', 'entry_time', 'event_time', 'final_price')
-        
+        # Use custom display methods for boolean columns — raw BIT(1) bytes from MySQL
+        # crash Django's _boolean_icon() if passed directly as readonly fields.
+        return ('order_id', 'symbol', 'company', 'side', 'order_type', 'status_label',
+                'shares', 'price', 'entry_time', 'event_time', 'final_price')
+
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
             return ()
