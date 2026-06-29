@@ -48,6 +48,10 @@ public class Companies {
     /** Shares still available for new BUY orders (decremented on reservation, incremented on cancel/fill). */
     private int availableShares;
 
+    /** All-time highest traded price. Initialised to initialPrice at IPO; updated atomically after every trade. */
+    @Column(name = "all_time_high")
+    private long allTimeHigh;
+
     @JsonIgnore
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Order> orders;
@@ -65,6 +69,7 @@ public class Companies {
         this.currentPrice = initialPrice;
         this.totalShares = totalShares;
         this.availableShares = 0; // no user owns shares at creation; pool grows as IPO fills
+        this.allTimeHigh = initialPrice;
     }
 
     @Override

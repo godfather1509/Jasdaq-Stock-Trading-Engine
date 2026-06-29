@@ -31,6 +31,7 @@ public class CompanyService {
 
     @PostConstruct
     public void loadCompanyMap() {
+        companyRepository.initAllTimeHighForExisting();
         for (Companies company : companyRepository.findAll()) {
             TradeEngine engine = new TradeEngine(company.getSymbol(), company.getCompanyId());
             engineMap.put(company.getCompanyId(), engine);
@@ -65,6 +66,9 @@ public class CompanyService {
      * Only saves to DB if not already present, then registers the TradeEngine in memory.
      */
     public Companies registerCompany(Companies company) {
+        if (company.getAllTimeHigh() == 0) {
+            company.setAllTimeHigh(company.getInitialPrice());
+        }
         if (!companyRepository.existsById(company.getCompanyId())) {
             companyRepository.save(company);
         }
@@ -92,6 +96,7 @@ public class CompanyService {
     @Transactional
     public void setCurrentPrice(long price, String companyId) {
         companyRepository.updateCurrentPrice(companyId, price);
+        companyRepository.updateAllTimeHighIfNeeded(companyId, price);
     }
 
     public boolean checkCompany(String symbol) {

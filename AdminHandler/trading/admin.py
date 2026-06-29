@@ -172,7 +172,7 @@ class TradeInline(admin.TabularInline):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display  = ('symbol', 'name', 'initial_price', 'current_price', 'total_shares', 'available_shares', 'market_cap', 'company_id')
+    list_display  = ('symbol', 'name', 'initial_price', 'current_price', 'all_time_high', 'total_shares', 'available_shares', 'market_cap', 'company_id')
     search_fields = ('symbol', 'name')
     list_filter   = ()
     ordering      = ('symbol',)
@@ -186,9 +186,8 @@ class CompanyAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
             return ()
-        # company_id is the PK — never editable
-        # current_price and available_shares are managed by the trading engine
-        return ('company_id', 'current_price', 'available_shares')
+        # company_id, current_price, available_shares, all_time_high are managed by the engine
+        return ('company_id', 'current_price', 'available_shares', 'all_time_high')
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is None:
@@ -199,7 +198,7 @@ class CompanyAdmin(admin.ModelAdmin):
         if obj is None:
             return ('symbol', 'name', 'total_shares', 'initial_price')
         return ('company_id', 'symbol', 'name', 'initial_price', 'current_price',
-                'total_shares', 'available_shares')
+                'all_time_high', 'total_shares', 'available_shares')
 
     def save_model(self, request, obj, form, change):
         """
@@ -220,6 +219,8 @@ class CompanyAdmin(admin.ModelAdmin):
 
             # Users own 0 shares at IPO — increments as BUY orders are filled
             obj.available_shares = 0
+            # All-time high starts at the listing (per-share) price
+            obj.all_time_high = obj.initial_price
 
         # Save to the shared MySQL database
         super().save_model(request, obj, form, change)

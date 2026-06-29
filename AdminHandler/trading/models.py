@@ -14,6 +14,8 @@ class Company(models.Model):
                                         help_text='Maximum shares available for trading (set at creation).')
     available_shares = models.IntegerField(db_column='available_shares', default=0,
                                            help_text='Shares still available for new BUY orders.')
+    all_time_high    = models.BigIntegerField(db_column='all_time_high', default=0,
+                                              help_text='All-time highest traded price. Set to listing price at IPO.')
 
     class Meta:
         managed = False          # Spring Boot owns DDL; Django only reads/writes data

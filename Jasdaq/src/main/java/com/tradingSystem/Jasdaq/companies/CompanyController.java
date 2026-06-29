@@ -78,6 +78,23 @@ public class CompanyController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<?> getStats(@PathVariable String id) {
+        return companyService.singleCompany(id)
+                .map(company -> {
+                    String sym = company.getSymbol();
+                    Long qty   = tradeRepository.getTotalQuantityBySymbol(sym);
+                    Long value = tradeRepository.getTotalValueBySymbol(sym);
+                    Long count = tradeRepository.getTradeCountBySymbol(sym);
+                    return ResponseEntity.ok(Map.of(
+                            "totalTrades",       count != null ? count : 0L,
+                            "totalVolume",       qty   != null ? qty   : 0L,
+                            "totalValueTraded",  value != null ? value : 0L
+                    ));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     /**
      * Called by the Django admin panel after a new Company is saved.
      */

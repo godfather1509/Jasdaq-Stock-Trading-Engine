@@ -38,12 +38,21 @@ function CompanyPage() {
     const [o, setO] = useState([]);
     const [chartData, setChartData] = useState([]);
     const [toasts, setToasts] = useState([]);
+    const [isLive, setIsLive] = useState(true);
+    const [windowSize, setWindowSize] = useState(60);
+    const [windowEnd,  setWindowEnd]  = useState(0);
+    const [orderPage, setOrderPage] = useState(0);
+    const ORDER_PS = 10;
+    const [sellPage, setSellPage] = useState(0);
+    const [buyPage,  setBuyPage]  = useState(0);
+    const BOOK_PS = 8;
     const [metrics, setMetrics] = useState({
         totalBuyShares: 0, totalSellShares: 0,
         buyLimitOrders: 0, sellLimitOrders: 0,
         buyMarketOrders: 0, sellMarketOrders: 0,
         currentPrice: 0
     });
+    const [stats, setStats] = useState({ totalTrades: 0, totalVolume: 0, totalValueTraded: 0 });
     const [form, setForm] = useState({ quantity: "", price: "", type: "market", side: "buy" });
 
     const stompClient = useRef(null);
@@ -55,6 +64,13 @@ function CompanyPage() {
             const res = await api.get(`${companyId}/metrics`);
             setMetrics(res.data);
         } catch (err) { console.warn("Failed to fetch metrics", err); }
+    }, [companyId]);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const res = await api.get(`${companyId}/stats`);
+            setStats(res.data);
+        } catch (err) { console.warn("Failed to fetch stats", err); }
     }, [companyId]);
 
     const showToast = (reason, type = "error") => {
@@ -77,8 +93,9 @@ function CompanyPage() {
                 const update = JSON.parse(msg.body);
                 if (update.companyId === companyId) {
                     setC(prev => ({ ...prev, currentPrice: update.price }));
-                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    setChartData(prev => [...prev, { time, price: update.price }].slice(-20));
+                    const now = Date.now();
+                    const time = new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    setChartData(prev => [...prev, { time, price: update.price, ts: now }].slice(-2000));
                 }
             });
 
@@ -178,9 +195,10 @@ function CompanyPage() {
                 // Endpoint returns DESC (newest first) — reverse so chart reads left=oldest, right=newest
                 const trades = (Array.isArray(res.data) ? res.data : res.data?.content ?? []).reverse();
                 if (trades.length > 0) {
-                    const mapped = trades.slice(-20).map(t => ({
+                    const mapped = trades.slice(-2000).map(t => ({
                         time: new Date(t.tradeTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                        price: t.price
+                        price: t.price,
+                        ts: t.tradeTime,
                     }));
                     setChartData(mapped);
                 }
@@ -191,9 +209,11 @@ function CompanyPage() {
         fetchOrders();
         fetchMetrics();
         fetchTrades();
+        fetchStats();
         const metricsInterval = setInterval(fetchMetrics, 3000);
         const companyInterval = setInterval(fetchCompany, 5000);
-        return () => { clearInterval(metricsInterval); clearInterval(companyInterval); };
+        const statsInterval   = setInterval(fetchStats, 30000);
+        return () => { clearInterval(metricsInterval); clearInterval(companyInterval); clearInterval(statsInterval); };
     }, [companyId]);
 
     const inputStyle = {
@@ -209,35 +229,66 @@ function CompanyPage() {
     return (
         <div style={{ background: BG, color: TEXT, minHeight: "100vh", padding: "28px 32px", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-            {/* Toast notifications */}
-            <div style={{
-                position: "fixed", top: "20px", right: "20px", zIndex: 9999,
-                display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px", width: "100%"
-            }}>
-                {toasts.map(toast => (
-                    <div key={toast.id} style={{
-                        background: SURFACE, border: `1px solid ${RED}40`,
-                        borderLeft: `4px solid ${RED}`,
-                        borderRadius: "10px", padding: "14px 16px",
-                        display: "flex", alignItems: "flex-start", gap: "12px",
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-                        animation: "slideInRight 0.2s ease-out",
+            {/* Toast stack — newest on top, older cards peek behind */}
+            {toasts.length > 0 && (() => {
+                const visible = toasts.slice(-3); // keep at most 3 in the stack
+                return (
+                    <div style={{
+                        position: "fixed", top: "20px", right: "20px",
+                        zIndex: 9999, width: "380px",
                     }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ color: RED_LT, fontWeight: 600, fontSize: "12px", margin: "0 0 4px 0" }}>
-                                Order Rejected
-                            </p>
-                            <p style={{ color: TEXT_SEC, fontSize: "13px", margin: 0, lineHeight: 1.5 }}>
-                                {toast.reason}
-                            </p>
-                        </div>
-                        <button onClick={() => dismissToast(toast.id)} style={{
-                            background: "none", border: "none", cursor: "pointer",
-                            color: TEXT_DIM, fontSize: "16px", lineHeight: 1, padding: "2px", flexShrink: 0
-                        }}>✕</button>
+                        {visible.map((toast, rawIdx) => {
+                            // newest is last in array → smallest stackDepth → front
+                            const stackDepth = visible.length - 1 - rawIdx;
+                            const isFront = stackDepth === 0;
+                            return (
+                                <div key={toast.id} style={{
+                                    position: "absolute", top: 0, left: 0, right: 0,
+                                    zIndex: visible.length - stackDepth,
+                                    transform: `translateY(${stackDepth * 8}px) scale(${1 - stackDepth * 0.04})`,
+                                    transformOrigin: "top center",
+                                    opacity: 1 - stackDepth * 0.18,
+                                    pointerEvents: isFront ? "auto" : "none",
+                                    transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+                                    background: SURFACE, border: `1px solid ${RED}40`,
+                                    borderLeft: `4px solid ${RED}`,
+                                    borderRadius: "10px", padding: "14px 16px",
+                                    display: "flex", alignItems: "flex-start", gap: "12px",
+                                    boxShadow: `0 ${4 + stackDepth * 3}px ${20 + stackDepth * 10}px rgba(0,0,0,${0.45 - stackDepth * 0.1})`,
+                                    animation: isFront ? "slideInRight 0.2s ease-out" : "none",
+                                }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                                            <p style={{ color: RED_LT, fontWeight: 600, fontSize: "12px", margin: 0 }}>
+                                                Order Rejected
+                                            </p>
+                                            {toasts.length > 1 && isFront && (
+                                                <span style={{
+                                                    background: `${RED}25`, color: RED_LT,
+                                                    fontSize: "10px", fontWeight: 700,
+                                                    padding: "1px 6px", borderRadius: "999px",
+                                                }}>
+                                                    {toasts.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p style={{ color: TEXT_SEC, fontSize: "13px", margin: 0, lineHeight: 1.5 }}>
+                                            {toast.reason}
+                                        </p>
+                                    </div>
+                                    {isFront && (
+                                        <button onClick={() => dismissToast(toast.id)} style={{
+                                            background: "none", border: "none", cursor: "pointer",
+                                            color: TEXT_DIM, fontSize: "16px", lineHeight: 1,
+                                            padding: "2px", flexShrink: 0,
+                                        }}>✕</button>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
-                ))}
-            </div>
+                );
+            })()}
 
             {/* Page header */}
             <div style={{ marginBottom: "28px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -262,7 +313,18 @@ function CompanyPage() {
                     <p style={{ fontSize: "28px", fontWeight: 700, color: GREEN, margin: 0, fontVariantNumeric: "tabular-nums" }}>
                         ₹{c.currentPrice?.toLocaleString()}
                     </p>
-                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "3px 0 0 0" }}>per share</p>
+                    {(() => {
+                        const pct = c.initialPrice > 0
+                            ? ((c.currentPrice - c.initialPrice) / c.initialPrice * 100)
+                            : 0;
+                        const col  = pct >= 0 ? GREEN_LT : RED_LT;
+                        const sign = pct >= 0 ? "+" : "";
+                        return (
+                            <p style={{ fontSize: "13px", color: col, margin: "4px 0 0 0", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                                {sign}{pct.toFixed(2)}% since listing
+                            </p>
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -287,48 +349,49 @@ function CompanyPage() {
                         </p>
                     </div>
 
-                    {/* Bid / Ask metrics */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-
-                        <div style={{ ...card, padding: "16px" }}>
-                            <p style={{ fontSize: "11px", fontWeight: 600, color: GREEN, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
-                                Bid Volume
-                            </p>
-                            <p style={{ fontSize: "20px", fontWeight: 700, color: TEXT, margin: "0 0 8px 0", fontVariantNumeric: "tabular-nums" }}>
-                                {metrics.totalBuyShares?.toLocaleString()}
-                            </p>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${GREEN}18`, color: GREEN_LT }}>
-                                    {metrics.buyLimitOrders} LMT
-                                </span>
-                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${INDIGO}18`, color: INDIGO_LT }}>
-                                    {metrics.buyMarketOrders} MKT
-                                </span>
+                    {/* % from Listing / % from ATH */}
+                    {(() => {
+                        const price   = c.currentPrice ?? 0;
+                        const listing = c.initialPrice ?? 0;
+                        const ath     = c.allTimeHigh  ?? 0;
+                        const pctList = listing > 0 ? (price - listing) / listing * 100 : 0;
+                        const pctAth  = ath     > 0 ? (price - ath)    / ath     * 100 : 0;
+                        const sign    = v => v >= 0 ? "+" : "";
+                        const rows = [
+                            { lbl: "From Listing", pct: pctList, base: listing },
+                            { lbl: "From ATH",     pct: pctAth,  base: ath     },
+                        ];
+                        return (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                                {rows.map(({ lbl, pct, base }) => {
+                                    const col    = pct >= 0 ? GREEN_LT : RED_LT;
+                                    const border = pct >= 0 ? `${GREEN}30` : `${RED}30`;
+                                    return (
+                                        <div key={lbl} style={{ ...card, padding: "16px", border: `1px solid ${border}` }}>
+                                            <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
+                                                {lbl}
+                                            </p>
+                                            <p style={{ fontSize: "22px", fontWeight: 700, color: col, margin: "0 0 4px 0", fontVariantNumeric: "tabular-nums" }}>
+                                                {sign(pct)}{pct.toFixed(2)}%
+                                            </p>
+                                            <p style={{ fontSize: "11px", color: TEXT_DIM, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                                base ₹{base.toLocaleString()}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        </div>
-                        <div style={{ ...card, padding: "16px" }}>
-                            <p style={{ fontSize: "11px", fontWeight: 600, color: RED, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
-                                Ask Volume
-                            </p>
-                            <p style={{ fontSize: "20px", fontWeight: 700, color: TEXT, margin: "0 0 8px 0", fontVariantNumeric: "tabular-nums" }}>
-                                {metrics.totalSellShares?.toLocaleString()}
-                            </p>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${RED}18`, color: RED_LT }}>
-                                    {metrics.sellLimitOrders} LMT
-                                </span>
-                                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${INDIGO}18`, color: INDIGO_LT }}>
-                                    {metrics.sellMarketOrders} MKT
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                        );
+                    })()}
 
                     {/* Shares in circulation */}
                     {(() => {
-                        const free    = c.availableShares ?? 0;
-                        const locked  = metrics.totalSellShares ?? 0;
-                        const total   = free + locked;
+                        const free       = c.availableShares ?? 0;
+                        const sellDepth  = metrics.totalSellShares ?? 0;
+                        // "total" is just the user-owned pool — always ≤ totalShares.
+                        // totalSellShares is the order-book sell depth (includes IPO supply),
+                        // NOT user-owned shares, so it must not be added to availableShares.
+                        const total = free;
                         return (
                             <div style={{ ...card, padding: "14px 16px" }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
@@ -347,8 +410,66 @@ function CompanyPage() {
                                         {free.toLocaleString()} owned (can sell)
                                     </span>
                                     <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${RED}18`, color: RED_LT }}>
-                                        {locked.toLocaleString()} in pending sell orders
+                                        {sellDepth.toLocaleString()} in pending sell orders
                                     </span>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Price Details */}
+                    <div style={{ ...card, padding: "14px 16px" }}>
+                        <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 10px 0" }}>
+                            Price Details
+                        </p>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
+                            <div>
+                                <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Listing Price</p>
+                                <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                    ₹{(c.initialPrice ?? 0).toLocaleString()}
+                                </p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>All-Time High</p>
+                                <p style={{ fontSize: "17px", fontWeight: 700, color: GREEN_LT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                    ₹{(c.allTimeHigh ?? 0).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Trading Activity */}
+                    {(() => {
+                        const fmt = n => {
+                            if (n >= 1e7)  return `₹${(n / 1e7).toFixed(2)} Cr`;
+                            if (n >= 1e5)  return `₹${(n / 1e5).toFixed(2)} L`;
+                            if (n >= 1000) return `₹${(n / 1000).toFixed(1)} K`;
+                            return `₹${n.toLocaleString()}`;
+                        };
+                        return (
+                            <div style={{ ...card, padding: "14px 16px" }}>
+                                <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 10px 0" }}>
+                                    Trading Activity
+                                </p>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                                    <div>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Total Trades</p>
+                                        <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                            {(stats.totalTrades ?? 0).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Volume (shares)</p>
+                                        <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                            {(stats.totalVolume ?? 0).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Turnover</p>
+                                        <p style={{ fontSize: "15px", fontWeight: 700, color: INDIGO_LT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                            {fmt(stats.totalValueTraded ?? 0)}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -443,32 +564,169 @@ function CompanyPage() {
 
                 {/* Right: chart + order book */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    <div style={{ ...card, padding: "20px 24px" }}>
-                        <p style={{ fontSize: "13px", fontWeight: 600, color: TEXT_SEC, margin: "0 0 16px 0" }}>Price Chart</p>
-                        <ResponsiveContainer width="100%" height={280}>
-                            <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={`${BORDER}80`} />
-                                <XAxis dataKey="time" axisLine={false} tickLine={false}
-                                    tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }} />
-                                <YAxis domain={["auto", "auto"]} axisLine={false} tickLine={false}
-                                    tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }} />
-                                <Tooltip
-                                    contentStyle={{
-                                        background: SURFACE, border: `1px solid ${BORDER}`,
-                                        borderRadius: "8px", color: TEXT, fontSize: "13px",
-                                        fontFamily: "'Inter', sans-serif"
-                                    }}
-                                    labelStyle={{ color: TEXT_SEC }}
-                                />
-                                <Line
-                                    type="monotone" dataKey="price" stroke={INDIGO}
-                                    strokeWidth={2} dot={false}
-                                    activeDot={{ r: 4, strokeWidth: 0, fill: INDIGO_LT }}
-                                    isAnimationActive={false}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
+                    {(() => {
+                        const n = chartData.length;
+
+                        // Visible slice
+                        const endIdx   = isLive ? n - 1 : Math.min(windowEnd, n - 1);
+                        const startIdx = Math.max(0, endIdx - windowSize + 1);
+                        const visibleData = n > 0 ? chartData.slice(startIdx, endIdx + 1) : [];
+
+                        const zoomIn  = () => setWindowSize(s => Math.max(10, Math.floor(s * 0.6)));
+                        const zoomOut = () => setWindowSize(s => Math.min(Math.max(n, 10), Math.ceil(s * 1.667)));
+
+                        const panStep = Math.max(1, Math.floor(windowSize * 0.25));
+                        const panLeft = () => {
+                            const cur = isLive ? n - 1 : windowEnd;
+                            setWindowEnd(Math.max(windowSize - 1, cur - panStep));
+                            setIsLive(false);
+                        };
+                        const panRight = () => {
+                            const cur  = isLive ? n - 1 : windowEnd;
+                            const next = Math.min(n - 1, cur + panStep);
+                            setWindowEnd(next);
+                            setIsLive(next >= n - 1);
+                        };
+
+                        const handleRangeClick = (minutes) => {
+                            setIsLive(false);
+                            if (minutes === null) {
+                                setWindowSize(Math.max(n, 10));
+                                setWindowEnd(n - 1);
+                            } else {
+                                const cutoff = Date.now() - minutes * 60 * 1000;
+                                const idx = chartData.findIndex(d => d.ts >= cutoff);
+                                const count = idx === -1 ? n : n - idx;
+                                setWindowSize(Math.max(count, 10));
+                                setWindowEnd(n - 1);
+                            }
+                        };
+
+                        const RANGES = [["1m", 1], ["5m", 5], ["15m", 15], ["1h", 60], ["All", null]];
+
+                        const canZoomIn   = windowSize > 10;
+                        const canZoomOut  = windowSize < n;
+                        const canPanLeft  = !isLive && startIdx > 0;
+                        const canPanRight = !isLive && endIdx < n - 1;
+
+                        const ctrlBtn = (active) => ({
+                            background: "none",
+                            border: `1px solid ${BORDER}`,
+                            color: active ? TEXT_SEC : TEXT_DIM,
+                            cursor: active ? "pointer" : "default",
+                            fontSize: "13px", fontWeight: 500,
+                            padding: "2px 9px", borderRadius: "4px",
+                            opacity: active ? 1 : 0.35,
+                            fontFamily: "'Inter', system-ui, sans-serif",
+                            lineHeight: 1.4,
+                            transition: "color 0.12s, border-color 0.12s",
+                        });
+
+                        return (
+                            <div style={{ ...card, padding: "20px 24px" }}>
+                                {/* Header */}
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                                        <p style={{ fontSize: "13px", fontWeight: 600, color: TEXT_SEC, margin: 0 }}>Price Chart</p>
+                                        <span style={{ fontSize: "11px", color: TEXT_DIM }}>
+                                            {visibleData.length}/{n} pts
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                        {/* Zoom */}
+                                        <button onClick={zoomOut} disabled={!canZoomOut} style={ctrlBtn(canZoomOut)}
+                                            onMouseEnter={e => { if (canZoomOut) { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT_SEC; }}}
+                                            onMouseLeave={e => { e.currentTarget.style.color = canZoomOut ? TEXT_SEC : TEXT_DIM; e.currentTarget.style.borderColor = BORDER; }}>−</button>
+                                        <button onClick={zoomIn} disabled={!canZoomIn} style={ctrlBtn(canZoomIn)}
+                                            onMouseEnter={e => { if (canZoomIn) { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT_SEC; }}}
+                                            onMouseLeave={e => { e.currentTarget.style.color = canZoomIn ? TEXT_SEC : TEXT_DIM; e.currentTarget.style.borderColor = BORDER; }}>+</button>
+
+                                        <span style={{ width: "1px", height: "14px", background: BORDER, margin: "0 2px", display: "inline-block" }} />
+
+                                        {/* Pan */}
+                                        <button onClick={panLeft} disabled={!canPanLeft} style={ctrlBtn(canPanLeft)}
+                                            onMouseEnter={e => { if (canPanLeft) { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT_SEC; }}}
+                                            onMouseLeave={e => { e.currentTarget.style.color = canPanLeft ? TEXT_SEC : TEXT_DIM; e.currentTarget.style.borderColor = BORDER; }}>‹</button>
+                                        <button onClick={panRight} disabled={!canPanRight} style={ctrlBtn(canPanRight)}
+                                            onMouseEnter={e => { if (canPanRight) { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT_SEC; }}}
+                                            onMouseLeave={e => { e.currentTarget.style.color = canPanRight ? TEXT_SEC : TEXT_DIM; e.currentTarget.style.borderColor = BORDER; }}>›</button>
+
+                                        <span style={{ width: "1px", height: "14px", background: BORDER, margin: "0 2px", display: "inline-block" }} />
+
+                                        {/* Range presets */}
+                                        {RANGES.map(([lbl, mins]) => (
+                                            <button key={lbl} onClick={() => handleRangeClick(mins)} style={{
+                                                background: "none", border: `1px solid ${BORDER}`,
+                                                color: TEXT_DIM, fontSize: "11px", fontWeight: 600,
+                                                padding: "3px 9px", borderRadius: "4px", cursor: "pointer",
+                                                fontFamily: "'Inter', system-ui, sans-serif",
+                                                transition: "color 0.12s, border-color 0.12s",
+                                            }}
+                                                onMouseEnter={e => { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT_SEC; }}
+                                                onMouseLeave={e => { e.currentTarget.style.color = TEXT_DIM; e.currentTarget.style.borderColor = BORDER; }}
+                                            >{lbl}</button>
+                                        ))}
+
+                                        <span style={{ width: "1px", height: "14px", background: BORDER, margin: "0 2px", display: "inline-block" }} />
+
+                                        {/* Live toggle */}
+                                        <button onClick={() => setIsLive(true)} style={{
+                                            background: isLive ? `${GREEN}18` : "none",
+                                            border: `1px solid ${isLive ? GREEN : BORDER}`,
+                                            color: isLive ? GREEN_LT : TEXT_DIM,
+                                            fontSize: "11px", fontWeight: 700,
+                                            padding: "3px 10px", borderRadius: "4px", cursor: "pointer",
+                                            fontFamily: "'Inter', system-ui, sans-serif",
+                                            display: "flex", alignItems: "center", gap: "5px",
+                                            transition: "all 0.15s",
+                                        }}>
+                                            <span style={{
+                                                width: "6px", height: "6px", borderRadius: "50%",
+                                                background: isLive ? GREEN : TEXT_DIM,
+                                                display: "inline-block",
+                                            }} />
+                                            LIVE
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <ResponsiveContainer width="100%" height={320}>
+                                    <LineChart data={visibleData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={`${BORDER}80`} />
+                                        <XAxis
+                                            dataKey="time"
+                                            axisLine={false} tickLine={false}
+                                            tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }}
+                                            interval="preserveStartEnd"
+                                            minTickGap={60}
+                                        />
+                                        <YAxis
+                                            domain={["auto", "auto"]}
+                                            axisLine={false} tickLine={false}
+                                            tick={{ fill: TEXT_DIM, fontSize: 11, fontFamily: "'Inter', sans-serif" }}
+                                            tickFormatter={v => `₹${Number(v).toLocaleString()}`}
+                                            width={90}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                background: SURFACE, border: `1px solid ${BORDER}`,
+                                                borderRadius: "8px", color: TEXT, fontSize: "13px",
+                                                fontFamily: "'Inter', sans-serif",
+                                            }}
+                                            labelStyle={{ color: TEXT_SEC }}
+                                            formatter={v => [`₹${Number(v).toLocaleString()}`, "Price"]}
+                                        />
+                                        <Line
+                                            type="monotone" dataKey="price" stroke={INDIGO}
+                                            strokeWidth={2} dot={false}
+                                            activeDot={{ r: 4, strokeWidth: 0, fill: INDIGO_LT }}
+                                            isAnimationActive={false}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        );
+                    })()}
 
                     {/* Order Book */}
                     <div style={{ ...card, padding: "24px" }}>
@@ -479,90 +737,128 @@ function CompanyPage() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
 
                             {/* Sell Orders */}
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                                    <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: RED }}></div>
-                                    <span style={{ fontSize: "12px", fontWeight: 600, color: RED_LT }}>Sell Orders</span>
-                                </div>
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                                            {["Price", "Shares"].map((h, i) => (
-                                                <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit)
-                                            .sort((a, b) => a.price - b.price)
-                                            .map((ord, idx) => (
-                                                <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = `${RED}08`}
-                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                    onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
-                                                    <td style={{ padding: "10px 12px", color: RED_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                                                        ₹{ord.price.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
-                                                        {ord.shares.toLocaleString()}
-                                                    </td>
+                            {(() => {
+                                const allSell = o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit).sort((a, b) => a.price - b.price);
+                                const totalSellPages = Math.max(1, Math.ceil(allSell.length / BOOK_PS));
+                                const sp = Math.min(sellPage, totalSellPages - 1);
+                                const pageSell = allSell.slice(sp * BOOK_PS, (sp + 1) * BOOK_PS);
+                                return (
+                                    <div>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: RED }}></div>
+                                                <span style={{ fontSize: "12px", fontWeight: 600, color: RED_LT }}>Sell Orders</span>
+                                                <span style={{ fontSize: "11px", color: TEXT_DIM }}>{allSell.length}</span>
+                                            </div>
+                                            {totalSellPages > 1 && (
+                                                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                    <button onClick={() => setSellPage(p => Math.max(0, p - 1))} disabled={sp === 0} style={{ background: "none", border: `1px solid ${BORDER}`, color: sp === 0 ? TEXT_DIM : TEXT_SEC, cursor: sp === 0 ? "default" : "pointer", fontSize: "11px", padding: "2px 7px", borderRadius: "4px", opacity: sp === 0 ? 0.4 : 1 }}>‹</button>
+                                                    <span style={{ fontSize: "11px", color: TEXT_DIM }}>{sp + 1}/{totalSellPages}</span>
+                                                    <button onClick={() => setSellPage(p => Math.min(totalSellPages - 1, p + 1))} disabled={sp === totalSellPages - 1} style={{ background: "none", border: `1px solid ${BORDER}`, color: sp === totalSellPages - 1 ? TEXT_DIM : TEXT_SEC, cursor: sp === totalSellPages - 1 ? "default" : "pointer", fontSize: "11px", padding: "2px 7px", borderRadius: "4px", opacity: sp === totalSellPages - 1 ? 0.4 : 1 }}>›</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                                                    {["Price", "Shares"].map((h, i) => (
+                                                        <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                                                    ))}
                                                 </tr>
-                                            ))}
-                                        {o.filter(ord => !ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit).length === 0 && (
-                                            <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No sell orders</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                            </thead>
+                                            <tbody>
+                                                {pageSell.length > 0 ? pageSell.map((ord, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = `${RED}08`}
+                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                        onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                                        <td style={{ padding: "10px 12px", color: RED_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>₹{ord.price.toLocaleString()}</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>{ord.shares.toLocaleString()}</td>
+                                                    </tr>
+                                                )) : (
+                                                    <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No sell orders</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Buy Orders */}
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                                    <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: GREEN }}></div>
-                                    <span style={{ fontSize: "12px", fontWeight: 600, color: GREEN_LT }}>Buy Orders</span>
-                                </div>
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                                            {["Price", "Shares"].map((h, i) => (
-                                                <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit)
-                                            .sort((a, b) => b.price - a.price)
-                                            .map((ord, idx) => (
-                                                <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = `${GREEN}08`}
-                                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                    onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
-                                                    <td style={{ padding: "10px 12px", color: GREEN_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                                                        ₹{ord.price.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
-                                                        {ord.shares.toLocaleString()}
-                                                    </td>
+                            {(() => {
+                                const allBuy = o.filter(ord => ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit).sort((a, b) => b.price - a.price);
+                                const totalBuyPages = Math.max(1, Math.ceil(allBuy.length / BOOK_PS));
+                                const bp = Math.min(buyPage, totalBuyPages - 1);
+                                const pageBuy = allBuy.slice(bp * BOOK_PS, (bp + 1) * BOOK_PS);
+                                return (
+                                    <div>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: GREEN }}></div>
+                                                <span style={{ fontSize: "12px", fontWeight: 600, color: GREEN_LT }}>Buy Orders</span>
+                                                <span style={{ fontSize: "11px", color: TEXT_DIM }}>{allBuy.length}</span>
+                                            </div>
+                                            {totalBuyPages > 1 && (
+                                                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                    <button onClick={() => setBuyPage(p => Math.max(0, p - 1))} disabled={bp === 0} style={{ background: "none", border: `1px solid ${BORDER}`, color: bp === 0 ? TEXT_DIM : TEXT_SEC, cursor: bp === 0 ? "default" : "pointer", fontSize: "11px", padding: "2px 7px", borderRadius: "4px", opacity: bp === 0 ? 0.4 : 1 }}>‹</button>
+                                                    <span style={{ fontSize: "11px", color: TEXT_DIM }}>{bp + 1}/{totalBuyPages}</span>
+                                                    <button onClick={() => setBuyPage(p => Math.min(totalBuyPages - 1, p + 1))} disabled={bp === totalBuyPages - 1} style={{ background: "none", border: `1px solid ${BORDER}`, color: bp === totalBuyPages - 1 ? TEXT_DIM : TEXT_SEC, cursor: bp === totalBuyPages - 1 ? "default" : "pointer", fontSize: "11px", padding: "2px 7px", borderRadius: "4px", opacity: bp === totalBuyPages - 1 ? 0.4 : 1 }}>›</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                                                    {["Price", "Shares"].map((h, i) => (
+                                                        <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                                                    ))}
                                                 </tr>
-                                            ))}
-                                        {o.filter(ord => ord.buySell && !ord.status && ord.shares > 0 && !ord.marketLimit).length === 0 && (
-                                            <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No buy orders</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                            </thead>
+                                            <tbody>
+                                                {pageBuy.length > 0 ? pageBuy.map((ord, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: `1px solid ${BORDER}30`, cursor: "pointer", transition: "background 0.1s" }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = `${GREEN}08`}
+                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                        onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
+                                                        <td style={{ padding: "10px 12px", color: GREEN_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>₹{ord.price.toLocaleString()}</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>{ord.shares.toLocaleString()}</td>
+                                                    </tr>
+                                                )) : (
+                                                    <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No buy orders</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Order History */}
+            {(() => {
+                const totalOrderPages = Math.max(1, Math.ceil(o.length / ORDER_PS));
+                const op = Math.min(orderPage, totalOrderPages - 1);
+                const pageOrders = o.slice(op * ORDER_PS, (op + 1) * ORDER_PS);
+                const firstItem = o.length === 0 ? 0 : op * ORDER_PS + 1;
+                const lastItem  = Math.min((op + 1) * ORDER_PS, o.length);
+                return (
             <div style={{ ...card, padding: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                     <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order History</p>
-                    <span style={{ fontSize: "12px", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: `${INDIGO}18`, color: INDIGO_LT }}>
-                        {o.length} orders
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        {o.length > ORDER_PS && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "11px", color: TEXT_DIM }}>{firstItem}–{lastItem} of {o.length}</span>
+                                <button onClick={() => setOrderPage(p => Math.max(0, p - 1))} disabled={op === 0} style={{ background: "none", border: `1px solid ${BORDER}`, color: op === 0 ? TEXT_DIM : TEXT_SEC, cursor: op === 0 ? "default" : "pointer", fontSize: "12px", padding: "3px 9px", borderRadius: "4px", opacity: op === 0 ? 0.4 : 1 }}>‹</button>
+                                <button onClick={() => setOrderPage(p => Math.min(totalOrderPages - 1, p + 1))} disabled={op === totalOrderPages - 1} style={{ background: "none", border: `1px solid ${BORDER}`, color: op === totalOrderPages - 1 ? TEXT_DIM : TEXT_SEC, cursor: op === totalOrderPages - 1 ? "default" : "pointer", fontSize: "12px", padding: "3px 9px", borderRadius: "4px", opacity: op === totalOrderPages - 1 ? 0.4 : 1 }}>›</button>
+                            </div>
+                        )}
+                        <span style={{ fontSize: "12px", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: `${INDIGO}18`, color: INDIGO_LT }}>
+                            {o.length} orders
+                        </span>
+                    </div>
                 </div>
                 <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -579,7 +875,7 @@ function CompanyPage() {
                         </thead>
                         <tbody>
                             {o.length > 0 ? (
-                                o.map((order, idx) => (
+                                pageOrders.map((order, idx) => (
                                     <tr key={idx}
                                         style={{ borderBottom: `1px solid ${BORDER}30`, transition: "background 0.1s" }}
                                         onMouseEnter={e => e.currentTarget.style.background = `${SURFACE}80`}
@@ -664,6 +960,8 @@ function CompanyPage() {
                     </table>
                 </div>
             </div>
+                );
+            })()}
         </div>
     );
 }
