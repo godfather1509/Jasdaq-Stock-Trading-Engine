@@ -23,6 +23,7 @@ Workers
 Semaphore: 50 simultaneous HTTP connections.
 """
 
+import argparse
 import asyncio
 import random
 import statistics
@@ -38,7 +39,41 @@ except ImportError:
     print("\033[91mMissing dependency. Run:  pip install aiohttp\033[0m")
     sys.exit(1)
 
-BASE_URL           = "http://localhost:8080/api/v1"
+_parser = argparse.ArgumentParser(description="Jasdaq 60-second load test")
+_parser.add_argument(
+    "--host",
+    default="localhost:8080",
+    metavar="HOST:PORT",
+    help="Backend host and port (default: localhost:8080). "
+         "Example: --host 192.168.1.42:8080",
+)
+_parser.add_argument(
+    "--db-password",
+    default="admin",
+    metavar="PASSWORD",
+    help="MySQL root password (default: admin)",
+)
+_args, _ = _parser.parse_known_args()
+
+BASE_URL   = f"http://{_args.host}/api/v1"
+
+# Try the user-supplied password first, then fallback candidates.
+def _resolve_db_password(supplied: str) -> str:
+    candidates = [supplied] + [p for p in ("admin", "root") if p != supplied]
+    for pwd in candidates:
+        try:
+            res = subprocess.run(
+                ["mysql", "-u", "root", f"-p{pwd}", "jasdaqdb",
+                 "--skip-column-names", "-e", "SELECT 1;"],
+                capture_output=True, text=True,
+            )
+            if res.returncode == 0:
+                return pwd
+        except FileNotFoundError:
+            break  # mysql not in PATH — no point trying further
+    return supplied  # fall back to whatever was supplied
+
+DB_PASSWORD = _resolve_db_password(_args.db_password)
 CONCURRENCY        = 50   # max simultaneous HTTP connections
 DURATION           = 60   # seconds to hammer the server
 WORKERS_PER_TRADER = 3    # concurrent order-placing coroutines per trader
@@ -314,16 +349,30 @@ def print_trader_stats() -> None:
 
 # ─── Reset / Teardown ─────────────────────────────────────────────────────────
 
+def _mysql(*args: str) -> subprocess.CompletedProcess:
+    """Run a mysql CLI command; returns a dummy result if mysql is not in PATH."""
+    cmd = ["mysql", "-u", "root", f"-p{DB_PASSWORD}", "jasdaqdb"] + list(args)
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        dummy = subprocess.CompletedProcess(cmd, returncode=1)
+        dummy.stdout = ""
+        dummy.stderr = "mysql client not found in PATH"
+        return dummy
+
+
 def reset_available_shares(companies: List[dict]) -> None:
+    failed = False
     for c in companies:
-        subprocess.run(
-            ["mysql", "-u", "root", "-padmin", "jasdaqdb", "-e",
-             f"UPDATE Companies SET available_shares = 0 "
-             f"WHERE company_id = '{c['companyId']}';"],
-            capture_output=True,
-        )
-    print(DIM + f"  [reset] available_shares zeroed for {len(companies)} "
-          f"compan{'y' if len(companies) == 1 else 'ies'}." + RESET)
+        res = _mysql("-e", f"UPDATE Companies SET available_shares = 0 "
+                          f"WHERE company_id = '{c['companyId']}';")
+        if res.returncode != 0 and not failed:
+            failed = True
+            err = res.stderr.strip().splitlines()[0] if res.stderr.strip() else "unknown error"
+            print(YELLOW + f"  [reset] MySQL warning: {err}" + RESET)
+    if not failed:
+        print(DIM + f"  [reset] available_shares zeroed for {len(companies)} "
+              f"compan{'y' if len(companies) == 1 else 'ies'}." + RESET)
 
 
 def teardown_pending_orders(companies: List[dict]) -> None:
@@ -349,37 +398,30 @@ def teardown_pending_orders(companies: List[dict]) -> None:
     _header("TEARDOWN", YELLOW)
 
     # Count pending user orders before cleanup
-    count_res = subprocess.run(
-        ["mysql", "-u", "root", "-padmin", "jasdaqdb",
-         "--skip-column-names", "-e",
-         "SELECT COUNT(*) FROM Orders WHERE status = 0 AND company_order = 0;"],
-        capture_output=True, text=True,
-    )
+    count_res = _mysql("--skip-column-names", "-e",
+                       "SELECT COUNT(*) FROM Orders WHERE status = 0 AND company_order = 0;")
     pending = 0
     if count_res.returncode == 0:
         try:
             pending = int(count_res.stdout.strip())
         except ValueError:
             pass
+    elif count_res.returncode != 0:
+        err = count_res.stderr.strip().splitlines()[0] if count_res.stderr.strip() else "unknown"
+        print(YELLOW + f"\n  [teardown] MySQL warning: {err} — skipping DB cleanup." + RESET)
+        return
 
     # Mark all pending user orders as cancelled for every tested company
     print(f"\n  {DIM}Cancelling {pending:,} pending user order(s) in MySQL ...{RESET}")
     for c in companies:
-        subprocess.run(
-            ["mysql", "-u", "root", "-padmin", "jasdaqdb", "-e",
-             f"UPDATE Orders SET status = 1 "
-             f"WHERE company_id = '{c['companyId']}' "
-             f"AND status = 0 AND company_order = 0;"],
-            capture_output=True,
-        )
+        _mysql("-e",
+               f"UPDATE Orders SET status = 1 "
+               f"WHERE company_id = '{c['companyId']}' "
+               f"AND status = 0 AND company_order = 0;")
 
     # Verify
-    after_res = subprocess.run(
-        ["mysql", "-u", "root", "-padmin", "jasdaqdb",
-         "--skip-column-names", "-e",
-         "SELECT COUNT(*) FROM Orders WHERE status = 0 AND company_order = 0;"],
-        capture_output=True, text=True,
-    )
+    after_res = _mysql("--skip-column-names", "-e",
+                       "SELECT COUNT(*) FROM Orders WHERE status = 0 AND company_order = 0;")
     remaining = "?"
     if after_res.returncode == 0:
         try:
@@ -423,7 +465,8 @@ async def main_async() -> None:
         f"{order_worker_count} order workers  +  "
         f"{READ_WORKERS} read workers  ·  "
         f"{CONCURRENCY} concurrent connections  ·  "
-        f"{BASE_URL}"
+        f"{BASE_URL}  ·  "
+        f"db-password: {DB_PASSWORD}"
         f"{RESET}"
     )
 
