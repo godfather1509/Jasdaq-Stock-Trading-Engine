@@ -132,6 +132,13 @@ public class EngineService {
                     }
                 }
 
+                // A SELL MARKET that partially fills leaves remaining shares stranded —
+                // they were reserved up-front but were never placed in the book.
+                // Release them back so the user can place future sell orders.
+                if (!buySell && !treatAsCompany && marketLimit && order.shares > 0 && !order.status) {
+                    companyService.releaseSharesFromSell(companyId, order.shares);
+                }
+
                 // 2. Persist order + trades directly to DB
                 Companies company = companyService.getCompanyById(companyId);
                 order.setCompany(company);
@@ -202,10 +209,16 @@ public class EngineService {
                 return;
             }
             if (result instanceof Order order) {
-                wsTemplate.convertAndSend("/topic/orders", order);
+                // Capture remaining shares before zeroing — needed for the pool release.
+                int remainingShares = order.shares;
+                // Zero shares so that if the DB delete ever fails, the persisted record
+                // shows FILLED (all shares gone) rather than a ghost partial state.
+                order.shares = 0;
+                // Broadcast on /topic/cancel so the frontend removes the row from the list.
+                wsTemplate.convertAndSend("/topic/cancel", order);
                 // Return the remaining reserved shares to the user ownership pool
                 if (!order.buySell) {
-                    companyService.releaseSharesFromSell(companyId, order.shares);
+                    companyService.releaseSharesFromSell(companyId, remainingShares);
                 }
                 deleteFromDatabaseAsync(order);
             }

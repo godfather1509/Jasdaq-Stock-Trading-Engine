@@ -35,7 +35,7 @@ public class CompanyService {
             TradeEngine engine = new TradeEngine(company.getSymbol(), company.getCompanyId());
             engineMap.put(company.getCompanyId(), engine);
             companyMap.put(company.getSymbol(), company);
-            engine.lob.loadOrderMap(company.getCompanyId(), orderRepository);
+            engine.lob.loadOrderMap(company.getSymbol(), orderRepository);
         }
     }
 

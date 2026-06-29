@@ -47,9 +47,14 @@ public class MatchingEngine {
     }
 
 
-    public void loadOrderMap(String compayId, OrderRepository orderRepository){
-        for(Order order:orderRepository.findByCompanyCompanyId(compayId)){
-            if(!order.status){
+    public void loadOrderMap(String sym, OrderRepository orderRepository){
+        // Query by symbol (always set, NOT NULL) — the company FK can be NULL
+        // for orders placed before the FK was fixed, so FK-based queries miss them.
+        // Skip market orders: they execute immediately on arrival and must never rest
+        // in the book. A partially-filled market order's remaining shares are stranded
+        // — re-loading them as LIMIT @ ₹0 would corrupt the LOB.
+        for(Order order : orderRepository.findBySymbolOrderByEntryTimeDesc(sym)){
+            if(!order.status && !order.marketLimit){
                 placeOrder(order);
             }
         }
@@ -289,6 +294,7 @@ public class MatchingEngine {
                 limit.pop();
                 orderMap.remove(order.orderId);
                 order.status = true;
+                order.shares = 0;
                 order.eventTime = System.currentTimeMillis();
                 totalShares -= matchQuantity;
                 if (limit.isEmpty()) {
@@ -313,9 +319,9 @@ public class MatchingEngine {
         incomingOrder.shares = remainingShares;
         if (filledShares > 0) {
             // VWAP across all price levels swept by this order
-            incomingOrder.finalPrice = weightedPriceSum / filledShares;
+            incomingOrder.finalPrice = Math.round((double) weightedPriceSum / filledShares);
             incomingOrder.eventTime = System.currentTimeMillis();
-            currentPrice = lastMatchedPrice; // LTP = last individual fill price (standard)
+            currentPrice = incomingOrder.finalPrice; // market price = VWAP of this sweep
         }
 
         if (remainingShares == 0) {

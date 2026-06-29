@@ -171,11 +171,16 @@ class TradeInline(admin.TabularInline):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display  = ('symbol', 'name', 'initial_price', 'current_price', 'total_shares', 'available_shares', 'company_id')
+    list_display  = ('symbol', 'name', 'initial_price', 'current_price', 'total_shares', 'available_shares', 'market_cap', 'company_id')
     search_fields = ('symbol', 'name')
     list_filter   = ()
     ordering      = ('symbol',)
     inlines       = [OrderInline, TradeInline]
+
+    def market_cap(self, obj):
+        valuation = obj.current_price * obj.total_shares
+        return f"₹{valuation:,}"
+    market_cap.short_description = "Market Cap (current price × shares)"
 
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
@@ -256,8 +261,26 @@ class CompanyAdmin(admin.ModelAdmin):
                     "restart the trading engine to reload the order book for this company."
                 )
 
+    def delete_model(self, request, obj):
+        """Cascade-delete all orders and trades by symbol, then the company."""
+        symbol = obj.symbol
+        deleted_orders, _ = Order.objects.filter(symbol=symbol).delete()
+        deleted_trades, _ = Trade.objects.filter(symbol=symbol).delete()
+        super().delete_model(request, obj)
+        messages.warning(
+            request,
+            f"🗑️ '{symbol}' deleted along with {deleted_orders} order(s) and {deleted_trades} trade(s). "
+            f"Restart the trading engine to remove the in-memory order book."
+        )
+
+    def delete_queryset(self, request, queryset):
+        """Bulk delete — cascade orders and trades for every selected company."""
+        for company in queryset:
+            Order.objects.filter(symbol=company.symbol).delete()
+            Trade.objects.filter(symbol=company.symbol).delete()
+        super().delete_queryset(request, queryset)
+
     def has_delete_permission(self, request, obj=None):
-        # Prevent accidental deletion of companies that have active orders
         return True
 
 
@@ -307,6 +330,9 @@ class OrderAdmin(admin.ModelAdmin):
             return ()
         return self.get_fields(request, obj)
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     def save_model(self, request, obj, form, change):
         if not change:
             payload = {
@@ -344,3 +370,6 @@ class TradeAdmin(admin.ModelAdmin):
     list_filter   = ('symbol',)
     search_fields = ('trade_id', 'symbol', 'buy_order_id', 'sell_order_id')
     ordering      = ('-trade_time',)
+
+    def has_delete_permission(self, request, obj=None):
+        return False

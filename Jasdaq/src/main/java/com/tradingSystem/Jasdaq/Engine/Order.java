@@ -67,8 +67,14 @@ public class Order {
 
     /** Derived fill status exposed to the frontend. No DB column needed. */
     public String getFillStatus() {
-        if (status) return "FILLED";
-        if (shares < initialShares) return "PARTIALLY_FILLED";
+        if (status) {
+            // status=true with leftover shares means the order was cancelled
+            // (cancel sets status=true but doesn't zero shares until EngineService does it).
+            // For data persisted before that fix, treat remaining shares as CANCELLED.
+            if (shares > 0 && initialShares > 0 && shares < initialShares) return "CANCELLED";
+            return "FILLED";
+        }
+        if (initialShares > 0 && shares < initialShares) return "PARTIALLY_FILLED";
         return "PENDING";
     }
 
