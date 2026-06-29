@@ -101,7 +101,7 @@ function CompanyPage() {
 
             client.subscribe("/topic/orders", (msg) => {
                 const updatedOrder = JSON.parse(msg.body);
-                if (updatedOrder.symbol !== companySymbol) return;
+                if (updatedOrder.symbol?.toUpperCase() !== companySymbol?.toUpperCase()) return;
                 if (pendingOrderRef.current) {
                     clearTimeout(pendingOrderRef.current);
                     pendingOrderRef.current = null;
@@ -201,6 +201,17 @@ function CompanyPage() {
                         ts: t.tradeTime,
                     }));
                     setChartData(mapped);
+                } else {
+                    try {
+                        const compRes = await api.get(companyId);
+                        if (compRes.data && compRes.data.currentPrice) {
+                            const now = Date.now();
+                            const time = new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            setChartData([{ time, price: compRes.data.currentPrice, ts: now }]);
+                        }
+                    } catch (e) {
+                        console.warn("Failed to fetch company for chart fallback", e);
+                    }
                 }
             } catch (err) { console.warn("Failed to fetch historical trades", err); }
         };
