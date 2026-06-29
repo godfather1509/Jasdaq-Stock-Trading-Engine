@@ -125,11 +125,13 @@ public class EngineService {
                 boolean tradeOccurred = list != null && !list.isEmpty();
                 if (tradeOccurred) {
                     companyService.setCurrentPrice(executedPrice, companyId);
-                    // Credit the buyer's shares into the user ownership pool
-                    if (buySell) {
-                        int tradedQty = list.stream().mapToInt(Trade::getQuantity).sum();
-                        companyService.creditBuyShares(companyId, tradedQty);
-                    }
+                    // Credit the buyer's shares for every trade regardless of which side is the
+                    // incoming aggressor. When SELL is incoming and fills resting BUY orders the
+                    // BUY side gains shares; without this credit availableShares drifts downward
+                    // every time a SELL sweeps the book. The reservation already decremented on
+                    // the sell side, so the net effect is still zero for user-to-user trades.
+                    int tradedQty = list.stream().mapToInt(Trade::getQuantity).sum();
+                    companyService.creditBuyShares(companyId, tradedQty);
                 }
 
                 // A SELL MARKET that partially fills leaves remaining shares stranded —

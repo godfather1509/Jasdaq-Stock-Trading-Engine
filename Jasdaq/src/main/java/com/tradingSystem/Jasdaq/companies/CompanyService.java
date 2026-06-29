@@ -89,15 +89,9 @@ public class CompanyService {
         return engineMap.get(companyId);
     }
 
+    @Transactional
     public void setCurrentPrice(long price, String companyId) {
-        Optional<Companies> optionalCompany = companyRepository.findById(companyId);
-        if (optionalCompany.isPresent()) {
-            Companies company = optionalCompany.get();
-            company.setCurrentPrice(price);
-            companyRepository.save(company);
-        } else {
-            System.out.println("Company not found");
-        }
+        companyRepository.updateCurrentPrice(companyId, price);
     }
 
     public boolean checkCompany(String symbol) {

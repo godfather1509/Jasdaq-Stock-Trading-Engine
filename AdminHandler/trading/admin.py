@@ -94,36 +94,31 @@ class OrderCreationForm(forms.ModelForm):
 class OrderBySymbolFormSet(BaseInlineFormSet):
     """Filter orders by symbol instead of the company FK.
 
-    BaseInlineFormSet.__init__ sets self.queryset via FK filter (company_id=pk), which
-    yields 0 rows when company_id is NULL. We replace self.queryset in __init__ — after
-    the parent runs — so that both initial_form_count() and get_queryset() use the
-    symbol-based queryset, which Spring Boot always populates.
+    The company FK is often NULL (orders placed before the FK was wired up),
+    so the default FK-based filter returns 0 rows. Overriding get_queryset()
+    directly is version-safe and avoids _queryset cache manipulation.
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def get_queryset(self):
         if self.instance and self.instance.pk:
-            self.queryset = Order.objects.filter(
+            return Order.objects.filter(
                 symbol=self.instance.symbol
             ).order_by('-entry_time')
-            if hasattr(self, '_queryset'):
-                del self._queryset
+        return super().get_queryset()
 
 
 class TradeBySymbolFormSet(BaseInlineFormSet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def get_queryset(self):
         if self.instance and self.instance.pk:
-            self.queryset = Trade.objects.filter(
+            return Trade.objects.filter(
                 symbol=self.instance.symbol
             ).order_by('-trade_time')
-            if hasattr(self, '_queryset'):
-                del self._queryset
+        return super().get_queryset()
 
 
 class OrderInline(admin.TabularInline):
     model = Order
     formset = OrderBySymbolFormSet
-    fields = ('side_label', 'type_label', 'status_label', 'shares', 'initial_shares', 'price', 'entry_time', 'edit_link')
+    fields = ('source_label', 'side_label', 'type_label', 'status_label', 'shares', 'initial_shares', 'price', 'entry_time', 'edit_link')
     readonly_fields = fields
     can_delete = False
     extra = 0
@@ -131,6 +126,12 @@ class OrderInline(admin.TabularInline):
 
     class Media:
         css = {'all': ('admin/css/order_inline.css',)}
+
+    def source_label(self, obj):
+        val = obj.company_order
+        is_company = (val == b'\x01' or val is True or val == 1)
+        return '🏢 System' if is_company else '👤 User'
+    source_label.short_description = 'Source'
 
     def side_label(self, obj):
         val = obj.buy_sell
@@ -288,11 +289,17 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display  = ('order_id', 'symbol', 'side', 'order_type', 'status_label',
-                     'shares', 'initial_shares', 'price', 'entry_time')
-    list_filter   = ('symbol',)
+    list_display  = ('order_id', 'symbol', 'source_label', 'side', 'order_type',
+                     'status_label', 'shares', 'initial_shares', 'price', 'entry_time')
+    list_filter   = ('symbol', 'company_order')
     search_fields = ('order_id', 'symbol')
     ordering      = ('-entry_time',)
+
+    def source_label(self, obj):
+        val = obj.company_order
+        is_company = (val == b'\x01' or val is True or val == 1)
+        return '🏢 System' if is_company else '👤 User'
+    source_label.short_description = 'Source'
 
     def side(self, obj):
         val = obj.buy_sell
@@ -322,8 +329,8 @@ class OrderAdmin(admin.ModelAdmin):
             return ('company', 'buy_sell', 'market_limit', 'shares', 'price')
         # Use custom display methods for boolean columns — raw BIT(1) bytes from MySQL
         # crash Django's _boolean_icon() if passed directly as readonly fields.
-        return ('order_id', 'symbol', 'company', 'side', 'order_type', 'status_label',
-                'shares', 'price', 'entry_time', 'event_time', 'final_price')
+        return ('order_id', 'symbol', 'company', 'source_label', 'side', 'order_type',
+                'status_label', 'shares', 'price', 'entry_time', 'event_time', 'final_price')
 
     def get_readonly_fields(self, request, obj=None):
         if obj is None:

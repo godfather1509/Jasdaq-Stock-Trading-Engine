@@ -42,7 +42,7 @@ public class Trade {
     private long tradeTime;
 
     @ManyToOne
-    @JoinColumn(name = "companyId")
+    @JoinColumn(name = "company_id")
     @JsonBackReference
     private Companies company;
 

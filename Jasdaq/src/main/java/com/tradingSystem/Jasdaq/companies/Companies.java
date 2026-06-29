@@ -64,7 +64,7 @@ public class Companies {
         this.initialPrice = initialPrice;
         this.currentPrice = initialPrice;
         this.totalShares = totalShares;
-        this.availableShares = totalShares;
+        this.availableShares = 0; // no user owns shares at creation; pool grows as IPO fills
     }
 
     @Override

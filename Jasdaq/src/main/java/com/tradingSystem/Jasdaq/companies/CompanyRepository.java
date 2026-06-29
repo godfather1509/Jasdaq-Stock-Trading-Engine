@@ -13,6 +13,11 @@ public interface CompanyRepository extends JpaRepository<Companies, String> {
     int decrementAvailableShares(@Param("id") String companyId, @Param("qty") int qty);
 
     @Modifying
-    @Query("UPDATE Companies c SET c.availableShares = c.availableShares + :qty WHERE c.companyId = :id")
+    @Query(value = "UPDATE Companies SET available_shares = LEAST(available_shares + :qty, total_shares) WHERE company_id = :id", nativeQuery = true)
     void incrementAvailableShares(@Param("id") String companyId, @Param("qty") int qty);
+
+    /** Atomically updates only the current price — never touches availableShares. */
+    @Modifying
+    @Query("UPDATE Companies c SET c.currentPrice = :price WHERE c.companyId = :id")
+    void updateCurrentPrice(@Param("id") String companyId, @Param("price") long price);
 }
