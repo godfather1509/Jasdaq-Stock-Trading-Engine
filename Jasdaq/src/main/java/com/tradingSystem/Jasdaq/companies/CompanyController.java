@@ -145,7 +145,7 @@ public class CompanyController {
     public ResponseEntity<Map<String, Object>> placeOrderRest(@RequestBody OrderDTO1 request) {
         try {
             engineService.placeOrder(request.getBuySell(), request.getPrice(), request.getShares(),
-                    request.getMarketLimit(), request.getCompanyId(), false, true);
+                    request.getMarketLimit(), request.getCompanyId(), false, false);
             return ResponseEntity.ok(Map.of("status", "ok", "message", "Order placed successfully in Engine"));
         } catch (Exception e) {
             e.printStackTrace();

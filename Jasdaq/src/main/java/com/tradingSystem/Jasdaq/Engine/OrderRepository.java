@@ -11,7 +11,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
     List<Order> findBySymbolOrderByEntryTimeDesc(String symbol);
 
-    @Query("SELECT AVG(o.eventTime - o.entryTime) FROM Order o WHERE o.status = true AND o.eventTime > 0")
+    @Query("SELECT AVG(o.eventTime - o.entryTime) FROM Order o WHERE o.status = true AND o.eventTime > 0 AND o.shares = 0")
     Double getAverageLatency();
 
 }

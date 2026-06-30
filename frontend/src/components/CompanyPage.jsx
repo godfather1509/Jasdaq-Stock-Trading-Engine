@@ -395,35 +395,40 @@ function CompanyPage() {
                         );
                     })()}
 
-                    {/* Shares in circulation */}
+                    {/* Share distribution */}
                     {(() => {
-                        const free       = c.availableShares ?? 0;
-                        const sellDepth  = metrics.totalSellShares ?? 0;
-                        // "total" is just the user-owned pool — always ≤ totalShares.
-                        // totalSellShares is the order-book sell depth (includes IPO supply),
-                        // NOT user-owned shares, so it must not be added to availableShares.
-                        const total = free;
+                        const total   = c.totalShares    ?? 0;
+                        const canSell = c.availableShares ?? 0;
+                        const canBuy  = Math.max(0, total - canSell);
+                        const sellPct = total > 0 ? (canSell / total) * 100 : 0;
                         return (
-                            <div style={{ ...card, padding: "14px 16px" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                            <div style={{ ...card, padding: "16px" }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
                                     <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>
-                                        Shares in Circulation
+                                        Share Distribution
                                     </p>
-                                    <p style={{ fontSize: "20px", fontWeight: 700, color: INDIGO_LT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                        {total.toLocaleString()}
-                                        <span style={{ fontSize: "11px", fontWeight: 400, color: TEXT_DIM, marginLeft: "5px" }}>
-                                            / {c.totalShares?.toLocaleString()}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${GREEN}18`, color: GREEN_LT }}>
-                                        {free.toLocaleString()} owned (can sell)
-                                    </span>
-                                    <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "4px", background: `${RED}18`, color: RED_LT }}>
-                                        {sellDepth.toLocaleString()} in pending sell orders
+                                    <span style={{ fontSize: "12px", fontWeight: 600, color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>
+                                        {total.toLocaleString()} total
                                     </span>
                                 </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                                    <div>
+                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>Avail. to Sell</p>
+                                        <p style={{ fontSize: "20px", fontWeight: 700, color: GREEN_LT, margin: "0 0 2px 0", fontVariantNumeric: "tabular-nums" }}>{canSell.toLocaleString()}</p>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>User-owned shares</p>
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>Avail. to Buy</p>
+                                        <p style={{ fontSize: "20px", fontWeight: 700, color: INDIGO_LT, margin: "0 0 2px 0", fontVariantNumeric: "tabular-nums" }}>{canBuy.toLocaleString()}</p>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>Not yet owned</p>
+                                    </div>
+                                </div>
+                                <div style={{ height: "6px", borderRadius: "3px", background: `${INDIGO}25`, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", borderRadius: "3px", width: `${sellPct}%`, background: GREEN, transition: "width 0.4s ease", minWidth: canSell > 0 ? "4px" : "0" }} />
+                                </div>
+                                <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "5px 0 0 0" }}>
+                                    {sellPct.toFixed(1)}% of shares in user hands
+                                </p>
                             </div>
                         );
                     })()}
@@ -486,91 +491,6 @@ function CompanyPage() {
                         );
                     })()}
 
-                    {/* Order form */}
-                    <div style={{ ...card, padding: "20px" }}>
-                        <p style={{ fontSize: "14px", fontWeight: 600, color: TEXT, margin: "0 0 16px 0" }}>Place Order</p>
-                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-
-                            {/* Buy / Sell toggle */}
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BORDER}` }}>
-                                {["buy", "sell"].map(side => (
-                                    <button
-                                        key={side}
-                                        type="button"
-                                        onClick={() => setForm(prev => ({ ...prev, side }))}
-                                        style={{
-                                            padding: "10px", border: "none", cursor: "pointer",
-                                            fontWeight: 600, fontSize: "13px",
-                                            fontFamily: "'Inter', system-ui, sans-serif",
-                                            background: form.side === side
-                                                ? (side === "buy" ? GREEN : RED)
-                                                : ELEVATED,
-                                            color: form.side === side ? "#fff" : TEXT_DIM,
-                                            transition: "background 0.15s, color 0.15s"
-                                        }}
-                                    >
-                                        {side.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div>
-                                <label style={label}>Order Type</label>
-                                <select name="type" value={form.type} onChange={handleChange} style={{ ...inputStyle, cursor: "pointer" }}>
-                                    <option value="market">Market</option>
-                                    <option value="limit">Limit</option>
-                                </select>
-                                <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "6px 0 0 0", lineHeight: 1.5 }}>
-                                    {form.type === "market"
-                                        ? "Executes immediately at the best available price. No price guarantee."
-                                        : "Executes only at your specified price or better. Stays in the book until matched."}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label style={label}>Quantity (shares)</label>
-                                <input
-                                    type="number" name="quantity" value={form.quantity}
-                                    onChange={handleChange} placeholder="0"
-                                    min="1" step="1"
-                                    style={inputStyle}
-                                    onFocus={e => e.target.style.borderColor = INDIGO}
-                                    onBlur={e => e.target.style.borderColor = BORDER}
-                                    required
-                                />
-                            </div>
-
-                            {form.type === "limit" && (
-                                <div>
-                                    <label style={label}>Limit Price <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(per share)</span></label>
-                                    <input
-                                        type="number" name="price" value={form.price}
-                                        onChange={handleChange} placeholder="0"
-                                        min="1" step="1"
-                                        style={inputStyle}
-                                        onFocus={e => e.target.style.borderColor = INDIGO}
-                                        onBlur={e => e.target.style.borderColor = BORDER}
-                                        required
-                                    />
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                style={{
-                                    background: isBuy ? GREEN : RED,
-                                    color: "#fff", border: "none", borderRadius: "8px",
-                                    padding: "12px", fontWeight: 600, fontSize: "14px",
-                                    cursor: "pointer", transition: "opacity 0.15s",
-                                    fontFamily: "'Inter', system-ui, sans-serif"
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                            >
-                                {isBuy ? "Buy" : "Sell"} {companySymbol}
-                            </button>
-                        </form>
-                    </div>
                 </div>
 
                 {/* Right: chart + order book */}

@@ -3,6 +3,12 @@ import Home from './components/Home'
 import Sidebar from './components/Sidebar'
 import CompanyPage from './components/CompanyPage'
 
+const topBar = {
+  position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+  height: "52px", background: "#0f172a", borderBottom: "1px solid #334155",
+  display: "flex", alignItems: "center", padding: "0 28px",
+};
+
 function App() {
 
   const router = createBrowserRouter(
@@ -14,9 +20,16 @@ function App() {
       {
         path: "/company/:companySymbol/:companyId",
         element: (
-          <div className="flex bg-gray-50 min-h-screen">
+          <div style={{ background: "#0f172a", minHeight: "100vh" }}>
+            <div style={topBar}>
+              <a href="/" style={{
+                fontSize: "18px", fontWeight: 700, color: "#f1f5f9",
+                textDecoration: "none", letterSpacing: "-0.3px",
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}>Jasdaq</a>
+            </div>
             <Sidebar />
-            <div className="flex-1 ml-64">
+            <div style={{ marginLeft: "260px", paddingTop: "52px" }}>
               <CompanyPage />
             </div>
           </div>
