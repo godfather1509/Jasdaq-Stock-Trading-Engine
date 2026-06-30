@@ -103,24 +103,19 @@ function Home() {
             <div style={{ padding: "40px 48px", maxWidth: "1400px", margin: "0 auto" }}>
 
                 {/* Stats row */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "48px" }}>
-                    {[
-                        { label: "Market Status", value: marketStats.marketStatus, color: GREEN },
-                        { label: "Total Volume", value: formatVolume(marketStats.totalVolume), color: INDIGO },
-                        { label: "Avg Latency", value: `${marketStats.avgLatency?.toFixed(2)}ms`, color: TEXT_SEC }
-                    ].map((stat, i) => (
-                        <div key={i} style={{
-                            background: SURFACE, border: `1px solid ${BORDER}`,
-                            borderRadius: "12px", padding: "20px 24px"
-                        }}>
-                            <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px 0" }}>
-                                {stat.label}
-                            </p>
-                            <p style={{ fontSize: "22px", fontWeight: 700, color: stat.color, margin: 0 }}>
-                                {stat.value}
-                            </p>
-                        </div>
-                    ))}
+                <div style={{ marginBottom: "48px" }}>
+                    <div style={{
+                        display: "inline-flex", alignItems: "center", gap: "8px",
+                        background: SURFACE, border: `1px solid ${BORDER}`,
+                        borderRadius: "12px", padding: "16px 24px"
+                    }}>
+                        <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+                            Avg Latency
+                        </p>
+                        <p style={{ fontSize: "18px", fontWeight: 700, color: TEXT_SEC, margin: 0 }}>
+                            {marketStats.avgLatency?.toFixed(2)}ms
+                        </p>
+                    </div>
                 </div>
 
                 {/* Section heading */}
