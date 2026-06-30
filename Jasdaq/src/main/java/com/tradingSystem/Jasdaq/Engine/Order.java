@@ -53,6 +53,26 @@ public class Order {
     public long eventTime;
     public long finalPrice;
 
+    /**
+     * Engine processing latency in MICROSECONDS: from the moment the order was
+     * enqueued (queue-submit) to the moment matching completed — i.e. queue wait +
+     * matching compute. Measured with System.nanoTime() (monotonic), so it is a true
+     * elapsed duration and immune to wall-clock adjustments. 0 when not measured
+     * (e.g. an order that rested without an immediate fill). Stored with a DB default
+     * so rows created before this column existed read as 0 and are excluded from the
+     * latency average.
+     */
+    @Column(columnDefinition = "BIGINT DEFAULT 0")
+    public long latencyMicros;
+
+    /**
+     * nanoTime() captured when the request entered the engine queue. Purely a timing
+     * aid used to compute {@link #latencyMicros}; never persisted or sent to clients.
+     */
+    @Transient
+    @JsonIgnore
+    public long submitNanos;
+
     /** True for system-placed orders (IPO, relisting, admin). Cannot be cancelled from the frontend. */
     @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     public boolean companyOrder = false;
@@ -68,11 +88,13 @@ public class Order {
     /** Derived fill status exposed to the frontend. No DB column needed. */
     public String getFillStatus() {
         if (status) {
-            // status=true with leftover shares means the order was cancelled
-            // (cancel sets status=true but doesn't zero shares until EngineService does it).
-            // For data persisted before that fix, treat remaining shares as CANCELLED.
-            if (shares > 0 && initialShares > 0 && shares < initialShares) return "CANCELLED";
-            return "FILLED";
+            // Terminal / closed order.
+            if (shares == 0) return "FILLED";
+            // A market order that filled some shares then dropped the rest is terminal but
+            // genuinely partially filled — not cancelled. Distinguish it from a cancellation
+            // (which keeps all its shares) by type, so it isn't mislabelled "CANCELLED".
+            if (marketLimit && shares < initialShares) return "PARTIALLY_FILLED";
+            return "CANCELLED";
         }
         if (initialShares > 0 && shares < initialShares) return "PARTIALLY_FILLED";
         return "PENDING";

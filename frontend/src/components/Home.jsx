@@ -20,7 +20,12 @@ function Home() {
     const [marketStats, setMarketStats] = useState({
         marketStatus: "Operational",
         totalVolume: 0,
-        avgLatency: 0
+        avgLatency: 0,
+        avgLatencyMicros: 0,
+        p50LatencyMicros: 0,
+        p99LatencyMicros: 0,
+        maxLatencyMicros: 0,
+        latencySamples: 0
     })
     const navigate = useNavigate()
     const stompClient = useRef(null);
@@ -32,6 +37,15 @@ function Home() {
         if (val >= 1e6)  return `$${(val / 1e6).toFixed(2)}M`;
         if (val >= 1e3)  return `$${(val / 1e3).toFixed(1)}K`;
         return `$${val.toLocaleString()}`;
+    };
+
+    // Latency arrives in microseconds. Show µs below 1ms (where the engine lives),
+    // switch to ms only once values are large enough that ms reads cleanly.
+    const formatLatency = (us) => {
+        if (us == null) return "—";
+        if (us <= 0) return "0 µs";
+        if (us < 1000) return `${us < 10 ? us.toFixed(1) : Math.round(us)} µs`;
+        return `${(us / 1000).toFixed(2)} ms`;
     };
 
     useEffect(() => {
@@ -102,20 +116,28 @@ function Home() {
 
             <div style={{ padding: "40px 48px", maxWidth: "1400px", margin: "0 auto" }}>
 
-                {/* Stats row */}
-                <div style={{ marginBottom: "48px" }}>
-                    <div style={{
-                        display: "inline-flex", alignItems: "center", gap: "8px",
-                        background: SURFACE, border: `1px solid ${BORDER}`,
-                        borderRadius: "12px", padding: "16px 24px"
-                    }}>
-                        <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
-                            Avg Latency
-                        </p>
-                        <p style={{ fontSize: "18px", fontWeight: 700, color: TEXT_SEC, margin: 0 }}>
-                            {marketStats.avgLatency?.toFixed(2)}ms
-                        </p>
-                    </div>
+                {/* Stats row — engine latency over the most recent matched orders */}
+                <div style={{ marginBottom: "48px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                    {[
+                        { label: "Avg Latency", value: formatLatency(marketStats.avgLatencyMicros) },
+                        { label: "P50",         value: formatLatency(marketStats.p50LatencyMicros) },
+                        { label: "P99",         value: formatLatency(marketStats.p99LatencyMicros) },
+                        { label: "Max",         value: formatLatency(marketStats.maxLatencyMicros) },
+                        { label: "Samples",     value: (marketStats.latencySamples ?? 0).toLocaleString() },
+                    ].map((s) => (
+                        <div key={s.label} style={{
+                            display: "inline-flex", flexDirection: "column", gap: "4px",
+                            background: SURFACE, border: `1px solid ${BORDER}`,
+                            borderRadius: "12px", padding: "14px 22px", minWidth: "108px"
+                        }}>
+                            <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+                                {s.label}
+                            </p>
+                            <p style={{ fontSize: "18px", fontWeight: 700, color: TEXT_SEC, margin: 0 }}>
+                                {s.value}
+                            </p>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Section heading */}

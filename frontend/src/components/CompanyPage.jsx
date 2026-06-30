@@ -32,7 +32,7 @@ const label = {
     display: "block", marginBottom: "6px"
 };
 
-function CompanyPage() {
+function CompanyPage({ onConnectionChange }) {
     const { companyId, companySymbol } = useParams();
     const [c, setC] = useState({});
     const [o, setO] = useState([]);
@@ -42,6 +42,9 @@ function CompanyPage() {
     const [windowSize, setWindowSize] = useState(60);
     const [windowEnd,  setWindowEnd]  = useState(0);
     const [orderPage, setOrderPage] = useState(0);
+    const [orderFilter, setOrderFilter] = useState("all");
+    const [orderTypeFilter, setOrderTypeFilter] = useState("all");
+    const [orderStatusFilter, setOrderStatusFilter] = useState("all");
     const ORDER_PS = 10;
     const [sellPage, setSellPage] = useState(0);
     const [buyPage,  setBuyPage]  = useState(0);
@@ -63,8 +66,12 @@ function CompanyPage() {
         try {
             const res = await api.get(`${companyId}/metrics`);
             setMetrics(res.data);
-        } catch (err) { console.warn("Failed to fetch metrics", err); }
-    }, [companyId]);
+            onConnectionChange?.(false);
+        } catch (err) {
+            console.warn("Failed to fetch metrics", err);
+            onConnectionChange?.(true); // surface the stall in the header instead of showing old data silently
+        }
+    }, [companyId, onConnectionChange]);
 
     const fetchStats = useCallback(async () => {
         try {
@@ -92,10 +99,16 @@ function CompanyPage() {
             client.subscribe("/topic/market-updates", (msg) => {
                 const update = JSON.parse(msg.body);
                 if (update.companyId === companyId) {
-                    setC(prev => ({ ...prev, currentPrice: update.price }));
-                    const now = Date.now();
-                    const time = new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    setChartData(prev => [...prev, { time, price: update.price, ts: now }].slice(-2000));
+                    setC(prev => ({
+                        ...prev,
+                        ...(update.price != null && { currentPrice: update.price }),
+                        ...(update.availableShares != null && { availableShares: update.availableShares }),
+                    }));
+                    if (update.price != null) {
+                        const now = Date.now();
+                        const time = new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        setChartData(prev => [...prev, { time, price: update.price, ts: now }].slice(-2000));
+                    }
                 }
             });
 
@@ -122,10 +135,7 @@ function CompanyPage() {
                 fetchMetrics();
             });
 
-            client.subscribe("/topic/order-rejected", (msg) => {
-                const rejection = JSON.parse(msg.body);
-                showToast(rejection.reason || "Order was rejected by the matching engine.", "error");
-            });
+
         });
 
         return () => { if (stompClient.current) stompClient.current.disconnect(); };
@@ -302,41 +312,54 @@ function CompanyPage() {
             })()}
 
             {/* Page header */}
-            <div style={{ marginBottom: "28px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <div style={{
-                            width: "40px", height: "40px", borderRadius: "10px",
-                            background: `${INDIGO}20`, border: `1px solid ${INDIGO}40`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: "16px", fontWeight: 700, color: INDIGO
-                        }}>
-                            {c.symbol?.[0]}
-                        </div>
-                        <div>
-                            <h1 style={{ fontSize: "22px", fontWeight: 700, color: TEXT, margin: 0 }}>{c.name}</h1>
-                            <p style={{ fontSize: "13px", color: TEXT_DIM, margin: "2px 0 0 0", fontWeight: 500 }}>{c.symbol}</p>
-                        </div>
+            <div style={{ marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                {/* Company identity */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{
+                        width: "40px", height: "40px", borderRadius: "10px",
+                        background: `${INDIGO}20`, border: `1px solid ${INDIGO}40`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "16px", fontWeight: 700, color: INDIGO, flexShrink: 0,
+                    }}>
+                        {c.symbol?.[0]}
+                    </div>
+                    <div>
+                        <h1 style={{ fontSize: "22px", fontWeight: 700, color: TEXT, margin: 0 }}>{c.name}</h1>
+                        <p style={{ fontSize: "13px", color: TEXT_DIM, margin: "2px 0 0 0", fontWeight: 500 }}>{c.symbol}</p>
                     </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: "11px", color: TEXT_DIM, margin: "0 0 4px 0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>Market Price</p>
-                    <p style={{ fontSize: "28px", fontWeight: 700, color: GREEN, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                        ₹{c.currentPrice?.toLocaleString()}
-                    </p>
-                    {(() => {
-                        const pct = c.initialPrice > 0
-                            ? ((c.currentPrice - c.initialPrice) / c.initialPrice * 100)
-                            : 0;
-                        const col  = pct >= 0 ? GREEN_LT : RED_LT;
-                        const sign = pct >= 0 ? "+" : "";
-                        return (
-                            <p style={{ fontSize: "13px", color: col, margin: "4px 0 0 0", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                                {sign}{pct.toFixed(2)}% since listing
+
+                {/* Price block */}
+                {(() => {
+                    const cur     = c.currentPrice ?? 0;
+                    const listing = c.initialPrice ?? 0;
+                    const ath     = c.allTimeHigh  ?? 0;
+                    const prev    = chartData.length >= 2 ? chartData[chartData.length - 2].price : null;
+                    const pctLast = prev > 0 ? (cur - prev) / prev * 100 : null;
+                    const sign    = v => v >= 0 ? "+" : "";
+                    return (
+                        <div style={{ textAlign: "right" }}>
+                            {/* Main price */}
+                            <p style={{ fontSize: "28px", fontWeight: 700, color: GREEN, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                ₹{cur.toLocaleString()}
                             </p>
-                        );
-                    })()}
-                </div>
+                            {/* Live spread — what a market order would ACTUALLY fill at */}
+                            {(metrics?.bestBid > 0 || metrics?.bestAsk > 0) && (
+                                <p style={{ fontSize: "12px", fontWeight: 500, margin: "4px 0 0 0", color: TEXT_DIM, fontVariantNumeric: "tabular-nums" }}>
+                                    Bid <span style={{ color: GREEN_LT, fontWeight: 600 }}>{metrics.bestBid > 0 ? `₹${metrics.bestBid.toLocaleString()}` : "—"}</span>
+                                    {"   ·   "}
+                                    Ask <span style={{ color: RED_LT, fontWeight: 600 }}>{metrics.bestAsk > 0 ? `₹${metrics.bestAsk.toLocaleString()}` : "—"}</span>
+                                </p>
+                            )}
+                            {pctLast != null && (
+                                <p style={{ fontSize: "13px", fontWeight: 600, margin: "3px 0 0 0", fontVariantNumeric: "tabular-nums",
+                                    color: pctLast >= 0 ? GREEN_LT : RED_LT }}>
+                                    {sign(pctLast)}{pctLast.toFixed(2)}% last trade
+                                </p>
+                            )}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Top row: metrics + form + chart */}
@@ -360,46 +383,14 @@ function CompanyPage() {
                         </p>
                     </div>
 
-                    {/* % from Listing / % from ATH */}
-                    {(() => {
-                        const price   = c.currentPrice ?? 0;
-                        const listing = c.initialPrice ?? 0;
-                        const ath     = c.allTimeHigh  ?? 0;
-                        const pctList = listing > 0 ? (price - listing) / listing * 100 : 0;
-                        const pctAth  = ath     > 0 ? (price - ath)    / ath     * 100 : 0;
-                        const sign    = v => v >= 0 ? "+" : "";
-                        const rows = [
-                            { lbl: "From Listing", pct: pctList, base: listing },
-                            { lbl: "From ATH",     pct: pctAth,  base: ath     },
-                        ];
-                        return (
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                                {rows.map(({ lbl, pct, base }) => {
-                                    const col    = pct >= 0 ? GREEN_LT : RED_LT;
-                                    const border = pct >= 0 ? `${GREEN}30` : `${RED}30`;
-                                    return (
-                                        <div key={lbl} style={{ ...card, padding: "16px", border: `1px solid ${border}` }}>
-                                            <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 8px 0" }}>
-                                                {lbl}
-                                            </p>
-                                            <p style={{ fontSize: "22px", fontWeight: 700, color: col, margin: "0 0 4px 0", fontVariantNumeric: "tabular-nums" }}>
-                                                {sign(pct)}{pct.toFixed(2)}%
-                                            </p>
-                                            <p style={{ fontSize: "11px", color: TEXT_DIM, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                                base ₹{base.toLocaleString()}
-                                            </p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })()}
-
                     {/* Share distribution */}
                     {(() => {
                         const total   = c.totalShares    ?? 0;
                         const canSell = c.availableShares ?? 0;
-                        const canBuy  = Math.max(0, total - canSell);
+                        // "Avail. to Buy" = shares actually resting on the sell side of the book,
+                        // not (total - owned). Unowned shares are only buyable if a SELL order
+                        // is offering them; otherwise a market buy is rejected for no liquidity.
+                        const canBuy  = metrics?.totalSellShares ?? 0;
                         const sellPct = total > 0 ? (canSell / total) * 100 : 0;
                         return (
                             <div style={{ ...card, padding: "16px" }}>
@@ -413,14 +404,14 @@ function CompanyPage() {
                                 </div>
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                                     <div>
-                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>Avail. to Sell</p>
+                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>Held by Users</p>
                                         <p style={{ fontSize: "20px", fontWeight: 700, color: GREEN_LT, margin: "0 0 2px 0", fontVariantNumeric: "tabular-nums" }}>{canSell.toLocaleString()}</p>
-                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>User-owned shares</p>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>Owned · not on offer</p>
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>Avail. to Buy</p>
+                                        <p style={{ fontSize: "10px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px 0" }}>On Offer</p>
                                         <p style={{ fontSize: "20px", fontWeight: 700, color: INDIGO_LT, margin: "0 0 2px 0", fontVariantNumeric: "tabular-nums" }}>{canBuy.toLocaleString()}</p>
-                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>Not yet owned</p>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: 0 }}>Buyable now (asks)</p>
                                     </div>
                                 </div>
                                 <div style={{ height: "6px", borderRadius: "3px", background: `${INDIGO}25`, overflow: "hidden" }}>
@@ -439,57 +430,29 @@ function CompanyPage() {
                             Price Details
                         </p>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
-                            <div>
-                                <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Listing Price</p>
-                                <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                    ₹{(c.initialPrice ?? 0).toLocaleString()}
-                                </p>
-                            </div>
-                            <div>
-                                <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>All-Time High</p>
-                                <p style={{ fontSize: "17px", fontWeight: 700, color: GREEN_LT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                    ₹{(c.allTimeHigh ?? 0).toLocaleString()}
-                                </p>
-                            </div>
+                            {[
+                                { label: "Listing Price", ref: c.initialPrice ?? 0, color: TEXT },
+                                { label: "All-Time High", ref: c.allTimeHigh ?? 0, color: GREEN_LT },
+                            ].map(({ label, ref, color }) => {
+                                const cur = c.currentPrice ?? 0;
+                                // % change of the current market price relative to this reference.
+                                const pct = ref > 0 ? ((cur - ref) / ref) * 100 : null;
+                                return (
+                                    <div key={label}>
+                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>{label}</p>
+                                        <p style={{ fontSize: "17px", fontWeight: 700, color, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                                            ₹{ref.toLocaleString()}
+                                        </p>
+                                        {pct !== null && (
+                                            <p style={{ fontSize: "11px", fontWeight: 600, margin: "3px 0 0 0", fontVariantNumeric: "tabular-nums", color: pct >= 0 ? GREEN_LT : RED_LT }}>
+                                                {pct >= 0 ? "+" : ""}{pct.toFixed(2)}%
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-
-                    {/* Trading Activity */}
-                    {(() => {
-                        const fmt = n => {
-                            if (n >= 1e7)  return `₹${(n / 1e7).toFixed(2)} Cr`;
-                            if (n >= 1e5)  return `₹${(n / 1e5).toFixed(2)} L`;
-                            if (n >= 1000) return `₹${(n / 1000).toFixed(1)} K`;
-                            return `₹${n.toLocaleString()}`;
-                        };
-                        return (
-                            <div style={{ ...card, padding: "14px 16px" }}>
-                                <p style={{ fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.07em", margin: "0 0 10px 0" }}>
-                                    Trading Activity
-                                </p>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                                    <div>
-                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Total Trades</p>
-                                        <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                            {(stats.totalTrades ?? 0).toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Volume (shares)</p>
-                                        <p style={{ fontSize: "17px", fontWeight: 700, color: TEXT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                            {(stats.totalVolume ?? 0).toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p style={{ fontSize: "10px", color: TEXT_DIM, margin: "0 0 3px 0", fontWeight: 500 }}>Turnover</p>
-                                        <p style={{ fontSize: "15px", fontWeight: 700, color: INDIGO_LT, margin: 0, fontVariantNumeric: "tabular-nums" }}>
-                                            {fmt(stats.totalValueTraded ?? 0)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
 
                 </div>
 
@@ -659,13 +622,16 @@ function CompanyPage() {
                         );
                     })()}
 
-                    {/* Order Book */}
-                    <div style={{ ...card, padding: "24px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                            <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order Book</p>
-                            <span style={{ fontSize: "12px", color: TEXT_DIM }}>Click a row to pre-fill the order form</span>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                </div>
+            </div>
+
+            {/* Order Book */}
+            <div style={{ ...card, padding: "24px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order Book</p>
+                    <span style={{ fontSize: "12px", color: TEXT_DIM }}>Click a row to pre-fill the order form</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
 
                             {/* Sell Orders */}
                             {(() => {
@@ -692,7 +658,7 @@ function CompanyPage() {
                                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                                             <thead>
                                                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                                                    {["Price", "Shares"].map((h, i) => (
+                                                    {["Price", "Shares", "Type"].map((h, i) => (
                                                         <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                                                     ))}
                                                 </tr>
@@ -705,9 +671,15 @@ function CompanyPage() {
                                                         onClick={() => setForm(prev => ({ ...prev, side: "buy", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
                                                         <td style={{ padding: "10px 12px", color: RED_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>₹{ord.price.toLocaleString()}</td>
                                                         <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>{ord.shares.toLocaleString()}</td>
+                                                        <td style={{ padding: "10px 12px" }}>
+                                                            <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 7px", borderRadius: "4px",
+                                                                ...(ord.marketLimit ? { background: `${INDIGO}18`, color: INDIGO_LT } : { background: `${TEXT_DIM}18`, color: TEXT_SEC }) }}>
+                                                                {ord.marketLimit ? "MKT" : "LMT"}
+                                                            </span>
+                                                        </td>
                                                     </tr>
                                                 )) : (
-                                                    <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No sell orders</td></tr>
+                                                    <tr><td colSpan="3" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No sell orders</td></tr>
                                                 )}
                                             </tbody>
                                         </table>
@@ -740,7 +712,7 @@ function CompanyPage() {
                                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                                             <thead>
                                                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                                                    {["Price", "Shares"].map((h, i) => (
+                                                    {["Price", "Shares", "Type"].map((h, i) => (
                                                         <th key={i} style={{ padding: "8px 12px", textAlign: i === 1 ? "right" : "left", fontSize: "11px", fontWeight: 600, color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                                                     ))}
                                                 </tr>
@@ -753,43 +725,86 @@ function CompanyPage() {
                                                         onClick={() => setForm(prev => ({ ...prev, side: "sell", type: "limit", price: String(ord.price), quantity: String(ord.shares) }))}>
                                                         <td style={{ padding: "10px 12px", color: GREEN_LT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>₹{ord.price.toLocaleString()}</td>
                                                         <td style={{ padding: "10px 12px", textAlign: "right", color: TEXT_SEC, fontVariantNumeric: "tabular-nums" }}>{ord.shares.toLocaleString()}</td>
+                                                        <td style={{ padding: "10px 12px" }}>
+                                                            <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 7px", borderRadius: "4px",
+                                                                ...(ord.marketLimit ? { background: `${INDIGO}18`, color: INDIGO_LT } : { background: `${TEXT_DIM}18`, color: TEXT_SEC }) }}>
+                                                                {ord.marketLimit ? "MKT" : "LMT"}
+                                                            </span>
+                                                        </td>
                                                     </tr>
                                                 )) : (
-                                                    <tr><td colSpan="2" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No buy orders</td></tr>
+                                                    <tr><td colSpan="3" style={{ padding: "24px 12px", textAlign: "center", fontSize: "12px", color: TEXT_DIM, fontStyle: "italic" }}>No buy orders</td></tr>
                                                 )}
                                             </tbody>
                                         </table>
                                     </div>
                                 );
                             })()}
-                        </div>
-                    </div>
                 </div>
             </div>
 
             {/* Order History */}
             {(() => {
-                const totalOrderPages = Math.max(1, Math.ceil(o.length / ORDER_PS));
+                const resetPage = () => setOrderPage(0);
+                const filtered = o
+                    .filter(x => orderFilter === "all" || (orderFilter === "buy" ? x.buySell : !x.buySell))
+                    .filter(x => orderTypeFilter === "all" || (orderTypeFilter === "market" ? x.marketLimit : !x.marketLimit))
+                    .filter(x => orderStatusFilter === "all" || (x.fillStatus || "PENDING") === orderStatusFilter);
+                const totalOrderPages = Math.max(1, Math.ceil(filtered.length / ORDER_PS));
                 const op = Math.min(orderPage, totalOrderPages - 1);
-                const pageOrders = o.slice(op * ORDER_PS, (op + 1) * ORDER_PS);
-                const firstItem = o.length === 0 ? 0 : op * ORDER_PS + 1;
-                const lastItem  = Math.min((op + 1) * ORDER_PS, o.length);
+                const pageOrders = filtered.slice(op * ORDER_PS, (op + 1) * ORDER_PS);
+                const firstItem = filtered.length === 0 ? 0 : op * ORDER_PS + 1;
+                const lastItem  = Math.min((op + 1) * ORDER_PS, filtered.length);
+
+                const FilterGroup = ({ options, active, onSelect, colorFn }) => (
+                    <div style={{ display: "flex", borderRadius: "6px", overflow: "hidden", border: `1px solid ${BORDER}` }}>
+                        {options.map(([val, lbl]) => (
+                            <button key={val} onClick={() => { onSelect(val); resetPage(); }} style={{
+                                padding: "4px 11px", border: "none", cursor: "pointer",
+                                fontSize: "12px", fontWeight: 600,
+                                fontFamily: "'Inter', system-ui, sans-serif",
+                                background: active === val ? (colorFn ? colorFn(val) : INDIGO) : ELEVATED,
+                                color: active === val ? "#fff" : TEXT_DIM,
+                                transition: "background 0.15s",
+                            }}>{lbl}</button>
+                        ))}
+                    </div>
+                );
+
                 return (
             <div style={{ ...card, padding: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                {/* Title + pagination row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                     <p style={{ fontSize: "15px", fontWeight: 600, color: TEXT, margin: 0 }}>Order History</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        {o.length > ORDER_PS && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        {filtered.length > ORDER_PS && (
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <span style={{ fontSize: "11px", color: TEXT_DIM }}>{firstItem}–{lastItem} of {o.length}</span>
+                                <span style={{ fontSize: "11px", color: TEXT_DIM }}>{firstItem}–{lastItem} of {filtered.length}</span>
                                 <button onClick={() => setOrderPage(p => Math.max(0, p - 1))} disabled={op === 0} style={{ background: "none", border: `1px solid ${BORDER}`, color: op === 0 ? TEXT_DIM : TEXT_SEC, cursor: op === 0 ? "default" : "pointer", fontSize: "12px", padding: "3px 9px", borderRadius: "4px", opacity: op === 0 ? 0.4 : 1 }}>‹</button>
                                 <button onClick={() => setOrderPage(p => Math.min(totalOrderPages - 1, p + 1))} disabled={op === totalOrderPages - 1} style={{ background: "none", border: `1px solid ${BORDER}`, color: op === totalOrderPages - 1 ? TEXT_DIM : TEXT_SEC, cursor: op === totalOrderPages - 1 ? "default" : "pointer", fontSize: "12px", padding: "3px 9px", borderRadius: "4px", opacity: op === totalOrderPages - 1 ? 0.4 : 1 }}>›</button>
                             </div>
                         )}
                         <span style={{ fontSize: "12px", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: `${INDIGO}18`, color: INDIGO_LT }}>
-                            {o.length} orders
+                            {filtered.length} orders
                         </span>
                     </div>
+                </div>
+                {/* Filter row */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+                    <FilterGroup
+                        options={[["all","All"],["buy","Buy"],["sell","Sell"]]}
+                        active={orderFilter} onSelect={setOrderFilter}
+                        colorFn={v => v === "buy" ? GREEN : v === "sell" ? RED : INDIGO}
+                    />
+                    <FilterGroup
+                        options={[["all","All"],["market","Market"],["limit","Limit"]]}
+                        active={orderTypeFilter} onSelect={setOrderTypeFilter}
+                    />
+                    <FilterGroup
+                        options={[["all","All"],["FILLED","Filled"],["PARTIALLY_FILLED","Partial"],["PENDING","Pending"],["CANCELLED","Cancelled"]]}
+                        active={orderStatusFilter} onSelect={setOrderStatusFilter}
+                        colorFn={v => v === "FILLED" ? GREEN : v === "CANCELLED" ? RED : v === "PARTIALLY_FILLED" ? INDIGO : TEXT_SEC}
+                    />
                 </div>
                 <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -805,7 +820,7 @@ function CompanyPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {o.length > 0 ? (
+                            {filtered.length > 0 ? (
                                 pageOrders.map((order, idx) => (
                                     <tr key={idx}
                                         style={{ borderBottom: `1px solid ${BORDER}30`, transition: "background 0.1s" }}
@@ -856,7 +871,9 @@ function CompanyPage() {
                                                         : order.fillStatus === "PARTIALLY_FILLED" ? INDIGO_LT
                                                         : TEXT_SEC
                                                 }}>
-                                                    {order.fillStatus || "PENDING"}
+                                                    {order.status && order.fillStatus === "PARTIALLY_FILLED"
+                                                        ? "PARTIAL · CLOSED"
+                                                        : (order.fillStatus || "PENDING")}
                                                 </span>
                                             </div>
                                         </td>

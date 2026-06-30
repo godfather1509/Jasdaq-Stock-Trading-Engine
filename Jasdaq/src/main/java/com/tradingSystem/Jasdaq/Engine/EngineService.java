@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -31,11 +32,18 @@ public class EngineService {
 
     private final AtomicLong lastStatsBroadcastAt = new AtomicLong(0);
 
-    @Autowired
-    private CompanyService companyService;
+    // Rolling window of the most recent matched-order latencies (microseconds).
+    // A bounded ring gives a CURRENT-load view (avg/p50/p99/max) instead of an
+    // all-time average that goes inert as the Orders table grows. Multiple engine
+    // threads (one per company) write here, so all access is guarded by latencyLock.
+    private static final int LATENCY_WINDOW = 1000;
+    private final long[] latencyRing = new long[LATENCY_WINDOW];
+    private int latencyCount = 0; // valid samples so far (caps at LATENCY_WINDOW)
+    private int latencyIdx = 0;   // next write position
+    private final Object latencyLock = new Object();
 
     @Autowired
-    private OrderRepository orderRepository;
+    private CompanyService companyService;
 
     @Autowired
     private TradeRepository tradeRepository;
@@ -48,6 +56,13 @@ public class EngineService {
 
     @Autowired
     private MulticastBroadcaster multicast;
+
+    @Autowired
+    private TradePersistenceService persistenceService;
+
+    @Autowired
+    @Qualifier("postTradeExecutor")
+    private Executor postTradeExecutor;
 
     @EventListener
     public void handleEvent(PlaceOrderEvent event) {
@@ -87,16 +102,24 @@ public class EngineService {
 
         CompletableFuture<Object> obj = engine.submitAddRequest(buySell, price, shares, marketLimit, treatAsCompany);
 
-        obj.whenComplete((result, throwables) -> {
+        // Run the post-match work on the postTradeExecutor, NOT the engine thread, so the
+        // matching thread is free to take the next order the instant it calls complete().
+        obj.whenCompleteAsync((result, throwables) -> {
             if (throwables != null) {
                 throwables.printStackTrace();
-                if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
+                if (!buySell && !treatAsCompany) {
+                    companyService.releaseSharesFromSell(companyId, shares);
+                    broadcastAvailableShares(companyId);
+                }
                 broadcastRejection(companyId, null, "Internal engine error: " + throwables.getMessage());
                 return;
             }
 
             if (result == null) {
-                if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
+                if (!buySell && !treatAsCompany) {
+                    companyService.releaseSharesFromSell(companyId, shares);
+                    broadcastAvailableShares(companyId);
+                }
                 String side = buySell ? "BUY" : "SELL";
                 String opposite = buySell ? "SELL" : "BUY";
                 String reason = side + " market order rejected: no " + opposite
@@ -110,7 +133,10 @@ public class EngineService {
                 Order order = tradeResults.order();
 
                 if (order == null) {
-                    if (!buySell && !treatAsCompany) companyService.releaseSharesFromSell(companyId, shares);
+                    if (!buySell && !treatAsCompany) {
+                        companyService.releaseSharesFromSell(companyId, shares);
+                        broadcastAvailableShares(companyId);
+                    }
                     String side = buySell ? "BUY" : "SELL";
                     String opposite = buySell ? "SELL" : "BUY";
                     String reason = side + " market order rejected: no " + opposite
@@ -119,6 +145,10 @@ public class EngineService {
                     broadcastRejection(companyId, null, reason);
                     return;
                 }
+
+                // Record this order's matching latency (µs) into the rolling window.
+                // Only set for orders that actually matched; resters carry 0 and are ignored.
+                recordLatency(order.getLatencyMicros());
 
                 // 1. Update current price in DB only when a real trade occurred
                 long executedPrice = order.getFinalPrice() > 0 ? order.getFinalPrice() : order.getPrice();
@@ -141,24 +171,36 @@ public class EngineService {
                     companyService.releaseSharesFromSell(companyId, order.shares);
                 }
 
-                // 2. Persist order + trades directly to DB
+                // 2. Persist the incoming order, the resting orders it touched, and its
+                //    trades as ONE atomic transaction. A failure is logged loudly and rolled
+                //    back (never silently swallowed), but it must not abort the market-data
+                //    broadcasts below — the trade already happened in the in-memory book.
                 Companies company = companyService.getCompanyById(companyId);
                 order.setCompany(company);
-                saveOrderToDatabaseAsync(order);
 
-                if (list != null) {
-                    for (Trade t : list) {
-                        t.setCompany(company);
-                        saveTradeToDatabase(t);
-                    }
-                }
-
-                // New: Handle affected existing orders (e.g., the partially filled IPO order)
                 List<Order> affected = tradeResults.affectedOrders();
                 if (affected != null) {
                     for (Order affectedOrder : affected) {
                         affectedOrder.setCompany(company);
-                        saveOrderToDatabaseAsync(affectedOrder);
+                    }
+                }
+                if (list != null) {
+                    for (Trade t : list) {
+                        t.setCompany(company);
+                    }
+                }
+
+                try {
+                    persistenceService.persistTradeResults(order, list, affected);
+                } catch (Exception persistError) {
+                    System.err.println("[CRITICAL] Order/trade persistence failed for companyId="
+                            + companyId + " — continuing with broadcasts: " + persistError.getMessage());
+                }
+
+                // New: notify subscribers of affected existing orders (e.g., the partially
+                // filled IPO order). Independent of persistence so it always fires.
+                if (affected != null) {
+                    for (Order affectedOrder : affected) {
                         wsTemplate.convertAndSend("/topic/orders", affectedOrder);
                     }
                 }
@@ -172,9 +214,14 @@ public class EngineService {
                     Map<String, Object> update = Map.of(
                         "companyId", companyId,
                         "price", executedPrice,
-                        "timestamp", System.currentTimeMillis()
+                        "timestamp", System.currentTimeMillis(),
+                        "availableShares", company != null ? company.getAvailableShares() : 0
                     );
                     wsTemplate.convertAndSend("/topic/market-updates", update);
+                } else if (company != null) {
+                    // Order entered the book with no immediate trade — push reservation change.
+                    wsTemplate.convertAndSend("/topic/market-updates",
+                        Map.of("companyId", companyId, "availableShares", company.getAvailableShares()));
                 }
 
                 // 5. Best-effort multicast broadcast
@@ -185,7 +232,7 @@ public class EngineService {
                     System.err.println("[WARN] Multicast failed: " + e.getMessage());
                 }
             }
-        });
+        }, postTradeExecutor);
     }
 
     public void cancelOrder(String orderId, String companyId) {
@@ -205,7 +252,7 @@ public class EngineService {
         }
         CompletableFuture<Object> obj = engine.submitCancelrequest(orderId);
 
-        obj.whenComplete((result, throwables) -> {
+        obj.whenCompleteAsync((result, throwables) -> {
             if (throwables != null) {
                 throwables.printStackTrace();
                 return;
@@ -222,9 +269,14 @@ public class EngineService {
                 if (!order.buySell) {
                     companyService.releaseSharesFromSell(companyId, remainingShares);
                 }
-                deleteFromDatabaseAsync(order);
+                try {
+                    persistenceService.deleteOrder(order);
+                } catch (Exception persistError) {
+                    System.err.println("[CRITICAL] Failed to delete cancelled order "
+                            + order.getOrderId() + ": " + persistError.getMessage());
+                }
             }
-        });
+        }, postTradeExecutor);
     }
 
     public CompletableFuture<Object> getMarketMetrics(String companyId) {
@@ -235,17 +287,59 @@ public class EngineService {
         return engine.submitMetricsRequest();
     }
 
+    /** Record one matched order's latency (microseconds) into the rolling window. */
+    private void recordLatency(long micros) {
+        if (micros <= 0) return; // only orders that actually matched carry a latency
+        synchronized (latencyLock) {
+            latencyRing[latencyIdx] = micros;
+            latencyIdx = (latencyIdx + 1) % LATENCY_WINDOW;
+            if (latencyCount < LATENCY_WINDOW) latencyCount++;
+        }
+    }
+
+    /** avg/p50/p99/max (microseconds) over the current rolling window. */
+    private Map<String, Object> latencyStats() {
+        long[] snapshot;
+        synchronized (latencyLock) {
+            snapshot = java.util.Arrays.copyOf(latencyRing, latencyCount);
+        }
+        int n = snapshot.length;
+        Map<String, Object> m = new HashMap<>();
+        if (n == 0) {
+            m.put("avgLatency", 0.0);          // milliseconds (frontend back-compat)
+            m.put("avgLatencyMicros", 0.0);
+            m.put("p50LatencyMicros", 0L);
+            m.put("p99LatencyMicros", 0L);
+            m.put("maxLatencyMicros", 0L);
+            m.put("latencySamples", 0);
+            return m;
+        }
+        java.util.Arrays.sort(snapshot);
+        long sum = 0;
+        for (long v : snapshot) sum += v;
+        double avgMicros = (double) sum / n;
+        long p50 = snapshot[(int) (n * 0.50)];
+        long p99 = snapshot[Math.max(0, (int) Math.ceil(n * 0.99) - 1)];
+        long max = snapshot[n - 1];
+        m.put("avgLatency", avgMicros / 1000.0); // milliseconds (frontend back-compat)
+        m.put("avgLatencyMicros", avgMicros);
+        m.put("p50LatencyMicros", p50);
+        m.put("p99LatencyMicros", p99);
+        m.put("maxLatencyMicros", max);
+        m.put("latencySamples", n);
+        return m;
+    }
+
     public Map<String, Object> getGlobalMarketStats() {
         long now = System.currentTimeMillis();
         if (cachedStats != null && (now - statsCachedAt) < STATS_CACHE_TTL_MS) {
             return cachedStats;
         }
         Long totalVolume = tradeRepository.getTotalVolume();
-        Double avgLatency = orderRepository.getAverageLatency();
         Map<String, Object> stats = new HashMap<>();
         stats.put("marketStatus", "Operational");
         stats.put("totalVolume", totalVolume != null ? totalVolume : 0L);
-        stats.put("avgLatency", avgLatency != null ? avgLatency : 0.0);
+        stats.putAll(latencyStats()); // avgLatency (ms) + avg/p50/p99/max + samples (µs)
         stats.put("timestamp", now);
         cachedStats = stats;
         statsCachedAt = now;
@@ -269,34 +363,6 @@ public class EngineService {
         }
     }
 
-    @Async("persistenceExecutor")
-    private void saveOrderToDatabaseAsync(Order order) {
-        try {
-            orderRepository.save(order);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Async("persistenceExecutor")
-    private void saveTradeToDatabase(Trade trade) {
-        try {
-            tradeRepository.save(trade);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Async("persistenceExecutor")
-    private void deleteFromDatabaseAsync(Order order) {
-        try {
-            orderRepository.delete(order);
-        } catch (Exception e) {
-            System.err.println("[ERROR] Failed to delete order: " + order.getOrderId());
-            e.printStackTrace();
-        }
-    }
-
     private String buildBroadcastMessage(String companyId, Order order) {
         Map<String, Object> m = new HashMap<>();
         try {
@@ -314,6 +380,18 @@ public class EngineService {
      * Broadcasts an order rejection notification to all connected frontend clients.
      * Frontend subscribes to /topic/order-rejected to receive these.
      */
+    private void broadcastAvailableShares(String companyId) {
+        try {
+            Companies co = companyService.getCompanyById(companyId);
+            if (co != null) {
+                wsTemplate.convertAndSend("/topic/market-updates",
+                    Map.of("companyId", companyId, "availableShares", co.getAvailableShares()));
+            }
+        } catch (Exception e) {
+            System.err.println("[WARN] broadcastAvailableShares failed: " + e.getMessage());
+        }
+    }
+
     private void broadcastRejection(String companyId, String symbol, String reason) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("companyId", companyId != null ? companyId : "");

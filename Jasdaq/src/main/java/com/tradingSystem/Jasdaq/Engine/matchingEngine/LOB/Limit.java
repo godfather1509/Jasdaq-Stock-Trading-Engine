@@ -126,15 +126,12 @@ public class Limit {
     }
 
     public Order getOrder(String orderId) {
-        // will return individul order
-        if (head.orderId.equals(orderId)) {
-            return getHead();
-        }
-        if (tail.orderId.equals(orderId)) {
-            return getTail();
-        }
+        // return the order with the given id, or null if it is not in this list.
+        // Null-check temp BEFORE dereferencing it, and compare ids by value with
+        // equals() — the previous version checked `temp.orderId != orderId` (reference
+        // comparison) before the null-check, so it could both miss matches and NPE.
         Order temp = head;
-        while (temp.orderId != orderId && temp != null) {
+        while (temp != null && !temp.orderId.equals(orderId)) {
             temp = temp.nextOrder;
         }
         return temp;
@@ -148,12 +145,17 @@ public class Limit {
         Order temp = head;
         while (temp != null) {
             newList.add(temp);
+            temp = temp.nextOrder; // advance the cursor — omitting this looped forever
         }
         newList.sort((a, b) -> Long.compare(a.entryTime, b.entryTime));
         head = null;
         tail = null;
+        size = 0;        // reset; insert() re-counts the list as it re-links it
+        limitVolume = 0; // reset; insert() re-accumulates the volume
 
         for (Order order : newList) {
+            order.nextOrder = null; // drop stale links before re-inserting
+            order.prevOrder = null;
             insert(order);
         }
     }

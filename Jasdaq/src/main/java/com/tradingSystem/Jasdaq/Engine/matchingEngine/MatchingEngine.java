@@ -50,10 +50,15 @@ public class MatchingEngine {
     public void loadOrderMap(String sym, OrderRepository orderRepository){
         // Query by symbol (always set, NOT NULL) — the company FK can be NULL
         // for orders placed before the FK was fixed, so FK-based queries miss them.
+        // ASCENDING by entryTime: placeOrder() appends each order to the tail of its
+        // price level, so replaying oldest-first rebuilds the book with the original
+        // price-time (FIFO) priority. Loading newest-first (Desc) would put the most
+        // recent order at the head and let it match first, silently breaking time
+        // priority after every restart.
         // Skip market orders: they execute immediately on arrival and must never rest
         // in the book. A partially-filled market order's remaining shares are stranded
         // — re-loading them as LIMIT @ ₹0 would corrupt the LOB.
-        for(Order order : orderRepository.findBySymbolOrderByEntryTimeDesc(sym)){
+        for(Order order : orderRepository.findBySymbolOrderByEntryTimeAsc(sym)){
             if(!order.status && !order.marketLimit){
                 placeOrder(order);
             }
@@ -95,7 +100,9 @@ public class MatchingEngine {
         long sellLimitOrders,
         long buyMarketOrders,
         long sellMarketOrders,
-        long currentPrice
+        long currentPrice,
+        long bestBid,   // highest resting BUY price — what a market SELL fills at (0 if none)
+        long bestAsk    // lowest resting SELL price  — what a market BUY fills at  (0 if none)
     ) {}
 
     public MarketMetrics getMetrics() {
@@ -107,25 +114,34 @@ public class MatchingEngine {
                 if (o.marketLimit) sm++; else sl++;
             }
         }
-        return new MarketMetrics(totalBuyShares, totalSellShares, bl, sl, bm, sm, currentPrice);
+        Limit bidLimit = buyTree.bestPrice();
+        Limit askLimit = sellTree.bestPrice();
+        long bestBid = bidLimit != null ? bidLimit.getPrice() : 0;
+        long bestAsk = askLimit != null ? askLimit.getPrice() : 0;
+        return new MarketMetrics(totalBuyShares, totalSellShares, bl, sl, bm, sm, currentPrice, bestBid, bestAsk);
     }
 
     public Order getOrder(String orderId) {
         return orderMap.get(orderId);
     }
 
-    public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares, boolean isCompanyOrder) {
+    public TradeResults addOrder(String orderId, boolean buySell, boolean marketLimit, long price, int shares, boolean isCompanyOrder, long submitNanos) {
         if (!orderMap.containsKey(orderId)) {
             list.clear(); // FIX: Clear trades from previous operations
             long entryTime = System.currentTimeMillis(); // get time when order is placed
             order = new Order(orderId, symbol, buySell, price, shares, entryTime, marketLimit);
             order.companyOrder = isCompanyOrder;
+            order.submitNanos = submitNanos; // carry the enqueue stamp for latency measurement
             if (marketLimit) {
                 // if it is a market order
                 OrderWrapper wrap = executeMarketOrder(order);
                 if (wrap == null) {
                     return null;
                 } else {
+                    // A market order never rests: once processed it is terminal even when only
+                    // partially filled — the unfilled remainder is dropped, not left pending. Mark
+                    // it closed so it doesn't read as a still-live order in the order history.
+                    wrap.getOrder().status = true;
                     return new TradeResults(new LinkedList<>(list), wrap.getOrder(), wrap.getAffectedOrders());
                 }
             } else {
@@ -321,6 +337,11 @@ public class MatchingEngine {
             // VWAP across all price levels swept by this order
             incomingOrder.finalPrice = Math.round((double) weightedPriceSum / filledShares);
             incomingOrder.eventTime = System.currentTimeMillis();
+            if (incomingOrder.submitNanos > 0) {
+                // Monotonic end-to-end latency: enqueue → fill complete (queue wait + matching).
+                // nanoTime() deltas are valid across threads in one JVM; / 1000 → microseconds.
+                incomingOrder.latencyMicros = (System.nanoTime() - incomingOrder.submitNanos) / 1000;
+            }
             currentPrice = incomingOrder.finalPrice; // market price = VWAP of this sweep
         }
 

@@ -12,14 +12,20 @@ const INDIGO   = "#6366f1";
 const GREEN    = "#10b981";
 const RED      = "#ef4444";
 const RED_LT   = "#f87171";
+const AMBER    = "#f59e0b";
 
 function Sidebar() {
     const { companyId, companySymbol } = useParams();
     const [form, setForm] = useState({ quantity: "", price: "", type: "market", side: "buy" });
     const [toast, setToast] = useState(null);
+    const [book, setBook]   = useState({ bestBid: 0, bestAsk: 0, currentPrice: 0 });
     const stompClient  = useRef(null);
-    const pendingTimer = useRef(null);
     const toastTimer   = useRef(null);
+
+    const dismissToast = () => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast(null);
+    };
 
     const showToast = (msg) => {
         if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -36,7 +42,6 @@ function Sidebar() {
             client.subscribe("/topic/order-rejected", (msg) => {
                 const r = JSON.parse(msg.body);
                 if (r.companyId === companyId) {
-                    if (pendingTimer.current) { clearTimeout(pendingTimer.current); pendingTimer.current = null; }
                     showToast(r.reason || "Order rejected by the engine.");
                 }
             });
@@ -44,8 +49,22 @@ function Sidebar() {
         return () => {
             if (stompClient.current) stompClient.current.disconnect();
             if (toastTimer.current)  clearTimeout(toastTimer.current);
-            if (pendingTimer.current) clearTimeout(pendingTimer.current);
         };
+    }, [companyId]);
+
+    // Poll the live book so we can show what a market order would actually fill at.
+    useEffect(() => {
+        if (!companyId) return;
+        let active = true;
+        const load = () => {
+            fetch(`http://localhost:8080/api/v1/${companyId}/metrics`)
+                .then(r => (r.ok ? r.json() : null))
+                .then(d => { if (active && d) setBook({ bestBid: d.bestBid ?? 0, bestAsk: d.bestAsk ?? 0, currentPrice: d.currentPrice ?? 0 }); })
+                .catch(() => {});
+        };
+        load();
+        const id = setInterval(load, 3000);
+        return () => { active = false; clearInterval(id); };
     }, [companyId]);
 
     const handleChange = (e) => {
@@ -71,19 +90,15 @@ function Sidebar() {
             companyId,
         }));
 
-        if (isMkt) {
-            const side     = form.side.toUpperCase();
-            const opposite = form.side === "buy" ? "SELL" : "BUY";
-            pendingTimer.current = setTimeout(() => {
-                pendingTimer.current = null;
-                showToast(`${side} market order rejected: no ${opposite} orders available.`);
-            }, 4000);
-        }
-
         setForm(prev => ({ ...prev, quantity: "", price: "" }));
     };
 
-    const isBuy = form.side === "buy";
+    const isBuy   = form.side === "buy";
+    const isMkt   = form.type === "market";
+    const estFill = isBuy ? book.bestAsk : book.bestBid;  // a market BUY fills at the ask, a SELL at the bid
+    const refPx   = book.currentPrice;                    // last traded price
+    const slipPct = (estFill > 0 && refPx > 0) ? ((estFill - refPx) / refPx) * 100 : null;
+    const bigSlip = slipPct != null && Math.abs(slipPct) >= 10;
 
     const input = {
         width: "100%", background: ELEVATED, border: `1px solid ${BORDER}`,
@@ -119,8 +134,15 @@ function Sidebar() {
                         borderLeft: `3px solid ${RED}`, borderRadius: "8px",
                         padding: "10px 12px", marginBottom: "14px",
                         fontSize: "12px", color: RED_LT, lineHeight: 1.5,
+                        display: "flex", alignItems: "flex-start", gap: "8px",
                     }}>
-                        {toast}
+                        <span style={{ flex: 1 }}>{toast}</span>
+                        <button type="button" onClick={dismissToast} aria-label="Dismiss"
+                            style={{
+                                background: "none", border: "none", color: RED_LT, cursor: "pointer",
+                                fontSize: "15px", lineHeight: 1, padding: 0, marginTop: "1px",
+                                fontFamily: "inherit", flexShrink: 0,
+                            }}>×</button>
                     </div>
                 )}
 
@@ -175,6 +197,33 @@ function Sidebar() {
                                 onFocus={e => e.target.style.borderColor = INDIGO}
                                 onBlur={e  => e.target.style.borderColor = BORDER}
                             />
+                        </div>
+                    )}
+
+                    {/* What a market order would ACTUALLY fill at — guards against the
+                        last-trade price being far from the real best bid/ask. */}
+                    {isMkt && (
+                        <div style={{
+                            background: (estFill <= 0 || bigSlip) ? `${AMBER}14` : ELEVATED,
+                            border: `1px solid ${(estFill <= 0 || bigSlip) ? AMBER + "55" : BORDER}`,
+                            borderRadius: "8px", padding: "9px 11px", fontSize: "11.5px", lineHeight: 1.5,
+                        }}>
+                            {estFill > 0 ? (
+                                <>
+                                    <span style={{ color: TEXT_DIM }}>Est. fill </span>
+                                    <span style={{ color: TEXT, fontWeight: 700 }}>≈ ₹{estFill.toLocaleString()}</span>
+                                    <span style={{ color: TEXT_DIM }}> ({isBuy ? "best ask" : "best bid"})</span>
+                                    {slipPct != null && Math.abs(slipPct) >= 1 && (
+                                        <div style={{ marginTop: "3px", color: bigSlip ? AMBER : TEXT_DIM, fontWeight: bigSlip ? 600 : 500 }}>
+                                            {bigSlip ? "⚠ " : ""}{slipPct >= 0 ? "+" : ""}{slipPct.toFixed(1)}% vs last trade ₹{refPx.toLocaleString()}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <span style={{ color: AMBER, fontWeight: 600 }}>
+                                    ⚠ No {isBuy ? "asks" : "bids"} resting — a market {isBuy ? "buy" : "sell"} can’t fill right now.
+                                </span>
+                            )}
                         </div>
                     )}
 

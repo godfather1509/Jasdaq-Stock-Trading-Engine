@@ -38,6 +38,7 @@ public class TradeEngine{
         boolean isCompanyOrder;
         Type reqType;
         String cancelOrderId;
+        long submitNanos; // nanoTime() stamped at enqueue, for end-to-end latency
         final CompletableFuture<Object> future;
 
         public Request(String orderId, boolean buySell, long price, int shares, boolean marketLimit, Type reqType, boolean isCompanyOrder) {
@@ -71,6 +72,7 @@ public class TradeEngine{
         // this function will add order
         String orderId=IdGenerator.nextID(symbol,'o'); // get order id
         Request req=new Request(orderId, buySell, price, shares, marketLimit, Type.addRequest, isCompanyOrder);
+        req.submitNanos = System.nanoTime(); // stamp at enqueue so latency includes queue wait
         SingleThreadQueue.add(req); // add request in queue
         return req.future;
     }
@@ -111,7 +113,7 @@ public class TradeEngine{
                 try {
                     switch (req.reqType) {
                         case addRequest:
-                            trades=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price, req.shares, req.isCompanyOrder);
+                            trades=lob.addOrder(req.orderId, req.buySell, req.marketLimit, req.price, req.shares, req.isCompanyOrder, req.submitNanos);
                             req.future.complete(trades);
                             break;
 

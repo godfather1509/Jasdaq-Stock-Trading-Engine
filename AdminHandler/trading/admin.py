@@ -130,7 +130,7 @@ class OrderInline(admin.TabularInline):
     def source_label(self, obj):
         val = obj.company_order
         is_company = (val == b'\x01' or val is True or val == 1)
-        return '🏢 System' if is_company else '👤 User'
+        return 'System' if is_company else '👤 User'
     source_label.short_description = 'Source'
 
     def side_label(self, obj):
@@ -299,7 +299,7 @@ class OrderAdmin(admin.ModelAdmin):
     def source_label(self, obj):
         val = obj.company_order
         is_company = (val == b'\x01' or val is True or val == 1)
-        return '🏢 System' if is_company else '👤 User'
+        return 'System' if is_company else '👤 User'
     source_label.short_description = 'Source'
 
     def side(self, obj):

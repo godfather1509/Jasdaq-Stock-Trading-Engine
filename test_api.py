@@ -78,6 +78,8 @@ CONCURRENCY        = 50   # max simultaneous HTTP connections
 DURATION           = 60   # seconds to hammer the server
 WORKERS_PER_TRADER = 3    # concurrent order-placing coroutines per trader
 READ_WORKERS       = 8    # concurrent read-only coroutines
+WARMUP_SECONDS     = 8    # buys-only phase to seed user share ownership before selling
+STATE_REFRESH_S    = 1.0  # how often to refresh per-company circulating shares / depth
 
 # ─── ANSI colours ─────────────────────────────────────────────────────────────
 GREEN   = "\033[92m"
@@ -114,6 +116,8 @@ class Trader:
     orders:       int  = 0
     accepted:     int  = 0
     rejected:     int  = 0
+    sell_skipped: int  = 0   # sells NOT sent: no circulating shares owned to sell
+    buy_skipped:  int  = 0   # market buys NOT sent: no ask-side liquidity on offer
     latencies_ms: list = field(default_factory=list)
 
     @property
@@ -136,6 +140,12 @@ TRADERS: List[Trader] = [
 # Global read counters (safe to mutate between await points in asyncio)
 _reads_ok:  int = 0
 _reads_err: int = 0
+
+# Live per-company state, refreshed by state_refresher(). Keyed by companyId:
+#   availableShares = shares users currently own (the sellable float in circulation)
+#   askDepth        = shares resting on the sell side ("shares available to buy")
+#   currentPrice / totalShares = latest price and authorised float
+COMPANY_STATE: dict = {}
 
 # Semaphore initialised in main_async()
 _sem: asyncio.Semaphore = None  # type: ignore[assignment]
@@ -175,23 +185,82 @@ async def a_get(session: aiohttp.ClientSession, path: str) -> dict:
             return await r.json()
 
 
+async def relist_all(session: aiohttp.ClientSession, companies: List[dict]) -> None:
+    """Re-seed sell-side liquidity before the run: ask the engine to relist each
+    company's unowned shares as a treasury sell wall, so the market starts buyable and
+    two-sided. Replaces the old reset_available_shares(), which zeroed ownership without
+    restoring a sell order — leaving unbuyable phantom shares."""
+    placed_total = 0
+    for c in companies:
+        try:
+            async with _sem:
+                async with session.post(f"{BASE_URL}/{c['companyId']}/relist") as r:
+                    data = await r.json()
+            placed_total += int(data.get("placed", 0) or 0)
+        except Exception:
+            pass
+    word = "company" if len(companies) == 1 else "companies"
+    print(DIM + f"  [relist] re-seeded sell walls ({placed_total:,} shares placed "
+          f"across {len(companies)} {word})." + RESET)
+
+
 async def order_worker(
     session:   aiohttp.ClientSession,
     trader:    Trader,
     companies: List[dict],
+    start:     float,
     deadline:  float,
 ) -> None:
-    """Loop: pick random company → place order → repeat until deadline."""
+    """
+    Loop until deadline, placing orders sized to the shares actually in circulation:
+
+      • SELL only what users currently own (availableShares). This mirrors the engine's
+        ownership gate, so the order is no longer silently rejected and instead either
+        rests as a real ask or crosses the bid book — building a two-sided market.
+      • Market BUY only when the ask side actually has shares on offer (askDepth);
+        otherwise the engine rejects it for "no liquidity".
+      • Warmup (first WARMUP_SECONDS): buys only, biased to MARKET against the IPO wall,
+        so user inventory exists before anyone tries to sell.
+
+    Orders we deliberately don't send are counted (sell_skipped / buy_skipped) rather
+    than fired blindly and bounced off the engine where the test couldn't see them.
+    """
     while time.monotonic() < deadline:
-        c        = random.choice(companies)
-        buy_sell = random.random() < trader.buy_bias
-        use_mkt  = random.random() < trader.market_bias
-        qty      = random.randint(1, trader.max_qty)
-        base     = max(c["currentPrice"], 1)
-        price    = 0 if use_mkt else _limit_price(base, buy_sell, trader.spread)
+        c     = random.choice(companies)
+        cid   = c["companyId"]
+        st    = COMPANY_STATE.get(cid, {})
+        avail = int(st.get("availableShares", 0))   # user-held shares, sellable
+        ask   = int(st.get("askDepth", 0))          # shares on offer = "available to buy"
+        base  = max(int(st.get("currentPrice", c.get("currentPrice", 1))), 1)
+
+        if (time.monotonic() - start) < WARMUP_SECONDS:
+            buy_sell = True
+            use_mkt  = ask > 0          # hit the wall to acquire inventory quickly
+        else:
+            buy_sell = random.random() < trader.buy_bias
+            use_mkt  = random.random() < trader.market_bias
+
+        if buy_sell:
+            if use_mkt:
+                if ask < 1:
+                    trader.buy_skipped += 1
+                    continue            # nothing offered — a market buy would be rejected
+                qty = min(random.randint(1, trader.max_qty), ask)
+                st["askDepth"] = ask - qty   # optimistic; state_refresher resyncs
+                price = 0
+            else:
+                qty   = random.randint(1, trader.max_qty)
+                price = _limit_price(base, True, trader.spread)
+        else:
+            if avail < 1:
+                trader.sell_skipped += 1
+                continue                # no circulating shares to sell
+            qty = min(random.randint(1, trader.max_qty), avail)
+            st["availableShares"] = avail - qty   # optimistic reserve; refresher resyncs
+            price = 0 if use_mkt else _limit_price(base, False, trader.spread)
 
         body = {
-            "companyId":   c["companyId"],
+            "companyId":   cid,
             "symbol":      c["symbol"],
             "buySell":     buy_sell,
             "marketLimit": use_mkt,
@@ -244,6 +313,37 @@ async def read_worker(
             _reads_err += 1
 
 
+async def state_refresher(
+    session:   aiohttp.ClientSession,
+    companies: List[dict],
+    deadline:  float,
+) -> None:
+    """Keep COMPANY_STATE current so order_worker can size orders to real supply:
+    circulating shares from /allCompanies, and book depth from each /metrics."""
+    while time.monotonic() < deadline:
+        try:
+            for c in await a_get(session, "/allCompanies"):
+                cid = c.get("companyId")
+                if not cid:
+                    continue
+                st = COMPANY_STATE.setdefault(cid, {})
+                st["availableShares"] = int(c.get("availableShares", 0))
+                st["currentPrice"]    = int(c.get("currentPrice", 0))
+                st["totalShares"]     = int(c.get("totalShares", 0))
+        except Exception:
+            pass
+        for c in companies:
+            cid = c["companyId"]
+            try:
+                m = await a_get(session, f"/{cid}/metrics")
+                st = COMPANY_STATE.setdefault(cid, {})
+                st["askDepth"] = int(m.get("totalSellShares", 0))
+                st["bidDepth"] = int(m.get("totalBuyShares", 0))
+            except Exception:
+                pass
+        await asyncio.sleep(STATE_REFRESH_S)
+
+
 async def reporter(start: float) -> None:
     """Print a live stats line every 5 seconds, then exit gracefully."""
     tick = 1
@@ -259,9 +359,10 @@ async def reporter(start: float) -> None:
                 break
 
             # Aggregate across all traders
-            total = sum(t.orders   for t in TRADERS)
-            ok    = sum(t.accepted for t in TRADERS)
-            lats  = sorted(l for t in TRADERS for l in t.latencies_ms)
+            total   = sum(t.orders   for t in TRADERS)
+            ok      = sum(t.accepted for t in TRADERS)
+            skipped = sum(t.sell_skipped + t.buy_skipped for t in TRADERS)
+            lats    = sorted(l for t in TRADERS for l in t.latencies_ms)
 
             p50  = lats[int(len(lats) * 0.50)]                    if lats else 0.0
             p99  = lats[max(0, int(len(lats) * 0.99) - 1)]        if lats else 0.0
@@ -280,6 +381,7 @@ async def reporter(start: float) -> None:
                 f"  {tput:.0f}/s"
                 f"  p50={p50:.0f}ms  p99={p99:.0f}ms"
                 f"  reads: {_reads_ok:,}"
+                f"  {DIM}skip {skipped:,}{RESET}"
             )
 
             tick += 1
@@ -318,10 +420,10 @@ def print_company_delta(before: List[dict], after: List[dict]) -> None:
 def print_trader_stats() -> None:
     _header("TRADER STATISTICS")
     print(f"\n  {'NAME':<10} {'STYLE':<13} {'ORDERS':>8} {'OK':>7} "
-          f"{'ERR':>7} {'HIT%':>7} {'AVG ms':>8} {'P50':>7} {'P99':>8}")
+          f"{'ERR':>7} {'HIT%':>7} {'AVG ms':>8} {'P50':>7} {'P99':>8} {'SKIP':>8}")
     _sep()
     for t in TRADERS:
-        if not t.orders:
+        if not t.orders and not (t.sell_skipped or t.buy_skipped):
             continue
         lats = sorted(t.latencies_ms)
         avg  = statistics.mean(lats)                         if lats else 0.0
@@ -331,10 +433,12 @@ def print_trader_stats() -> None:
         hcol = GREEN if hit >= 60 else YELLOW if hit >= 30 else RED
         print(f"  {t.color}{BOLD}{t.name:<10}{RESET} {t.style:<13} "
               f"{t.orders:>8,} {GREEN}{t.accepted:>7,}{RESET} {RED}{t.rejected:>7,}{RESET} "
-              f"{hcol}{hit:>6.1f}%{RESET} {avg:>7.1f}  {p50:>6.0f}  {p99:>7.0f}")
+              f"{hcol}{hit:>6.1f}%{RESET} {avg:>7.1f}  {p50:>6.0f}  {p99:>7.0f}"
+              f"  {YELLOW}{t.sell_skipped + t.buy_skipped:>7,}{RESET}")
 
-    total = sum(t.orders   for t in TRADERS)
-    ok    = sum(t.accepted for t in TRADERS)
+    total   = sum(t.orders   for t in TRADERS)
+    ok      = sum(t.accepted for t in TRADERS)
+    skipped = sum(t.sell_skipped + t.buy_skipped for t in TRADERS)
     lats  = sorted(l for t in TRADERS for l in t.latencies_ms)
     hit   = (ok / total * 100)                           if total else 0.0
     avg   = statistics.mean(lats)                        if lats  else 0.0
@@ -344,7 +448,8 @@ def print_trader_stats() -> None:
     _sep()
     print(f"  {BOLD}{'TOTAL':<10}{RESET} {'':13} "
           f"{total:>8,} {GREEN}{ok:>7,}{RESET} {RED}{total-ok:>7,}{RESET} "
-          f"{hcol}{hit:>6.1f}%{RESET} {avg:>7.1f}  {p50:>6.0f}  {p99:>7.0f}")
+          f"{hcol}{hit:>6.1f}%{RESET} {avg:>7.1f}  {p50:>6.0f}  {p99:>7.0f}"
+          f"  {YELLOW}{skipped:>7,}{RESET}")
 
 
 # ─── Reset / Teardown ─────────────────────────────────────────────────────────
@@ -432,7 +537,9 @@ def teardown_pending_orders(companies: List[dict]) -> None:
     print(f"  {GREEN}✓{RESET}  {pending:,} orders cancelled  "
           f"({remaining} still pending in DB)")
 
-    reset_available_shares(companies)
+    # NOTE: deliberately NOT zeroing available_shares here. Doing so leaves "unowned"
+    # shares with no resting sell order to back them — an unbuyable phantom. The next
+    # run's relist step re-seeds the sell wall instead, keeping the market consistent.
 
     # ── Warning about in-memory state ─────────────────────────────────────────
     print(f"""
@@ -469,6 +576,10 @@ async def main_async() -> None:
         f"db-password: {DB_PASSWORD}"
         f"{RESET}"
     )
+    print(
+        f"  {DIM}{WARMUP_SECONDS}s buys-only warmup  ·  "
+        f"orders sized to circulation (sell ≤ owned, market-buy ≤ ask depth){RESET}"
+    )
 
     connector = aiohttp.TCPConnector(limit=CONCURRENCY + 16)
     timeout   = aiohttp.ClientTimeout(total=30)
@@ -488,18 +599,28 @@ async def main_async() -> None:
             print(RED + "  No companies found — create one in Django admin first." + RESET)
             sys.exit(1)
 
-        reset_available_shares(companies)
+        await relist_all(session, companies)
         print_company_table(companies)
         before = [dict(c) for c in companies]
 
         # Launch
         _sep("═")
         print(f"\n  {BOLD}{GREEN}▶  Starting {DURATION}s load test ...{RESET}\n")
+        # Seed live state so the very first order is sized from real data
+        for c in companies:
+            COMPANY_STATE[c["companyId"]] = {
+                "availableShares": int(c.get("availableShares", 0)),
+                "currentPrice":    int(c.get("currentPrice", 0)),
+                "totalShares":     int(c.get("totalShares", 0)),
+                "askDepth": 0,
+                "bidDepth": 0,
+            }
+
         t_start  = time.monotonic()
         deadline = t_start + DURATION
 
         order_tasks = [
-            asyncio.create_task(order_worker(session, trader, companies, deadline))
+            asyncio.create_task(order_worker(session, trader, companies, t_start, deadline))
             for trader in TRADERS
             for _ in range(WORKERS_PER_TRADER)
         ]
@@ -507,17 +628,20 @@ async def main_async() -> None:
             asyncio.create_task(read_worker(session, companies, deadline))
             for _ in range(READ_WORKERS)
         ]
-        reporter_task = asyncio.create_task(reporter(t_start))
+        refresher_task = asyncio.create_task(state_refresher(session, companies, deadline))
+        reporter_task  = asyncio.create_task(reporter(t_start))
 
-        # Wait for all workers (they all exit at deadline)
+        # Wait for all order/read workers (they all exit at deadline)
         await asyncio.gather(*order_tasks, *read_tasks, return_exceptions=True)
 
-        # Cleanly stop reporter
-        reporter_task.cancel()
-        try:
-            await reporter_task
-        except asyncio.CancelledError:
-            pass
+        # Cleanly stop background tasks
+        for task in (refresher_task, reporter_task):
+            task.cancel()
+        for task in (refresher_task, reporter_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
         elapsed = time.monotonic() - t_start
 
@@ -541,6 +665,8 @@ async def main_async() -> None:
         _header("SUMMARY", GREEN)
         total = sum(t.orders   for t in TRADERS)
         ok    = sum(t.accepted for t in TRADERS)
+        sells_skipped = sum(t.sell_skipped for t in TRADERS)
+        buys_skipped  = sum(t.buy_skipped  for t in TRADERS)
         lats  = sorted(l for t in TRADERS for l in t.latencies_ms)
         hit   = (ok / total * 100)                           if total else 0.0
         avg   = statistics.mean(lats)                        if lats  else 0.0
@@ -556,6 +682,8 @@ async def main_async() -> None:
   {BOLD}Total orders    :{RESET} {total:,}
   {BOLD}Accepted        :{RESET} {GREEN}{ok:,}{RESET}
   {BOLD}Rejected/Error  :{RESET} {RED}{total - ok:,}{RESET}
+  {BOLD}Sells skipped   :{RESET} {YELLOW}{sells_skipped:,}{RESET}  {DIM}(no owned shares to sell){RESET}
+  {BOLD}Buys skipped    :{RESET} {YELLOW}{buys_skipped:,}{RESET}  {DIM}(no ask-side liquidity){RESET}
   {BOLD}Hit rate        :{RESET} {hit:.1f}%
   {BOLD}Throughput      :{RESET} {tput:.1f} orders/s
   {BOLD}Avg latency     :{RESET} {avg:.1f} ms

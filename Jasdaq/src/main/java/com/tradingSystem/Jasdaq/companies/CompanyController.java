@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import com.tradingSystem.Jasdaq.Engine.DTO.OrderDTO1;
+import com.tradingSystem.Jasdaq.Engine.matchingEngine.MatchingEngine;
 import org.springframework.context.ApplicationEventPublisher;
 import java.util.UUID;
 
@@ -60,6 +63,50 @@ public class CompanyController {
                     if (metrics == null) return ResponseEntity.notFound().build();
                     return ResponseEntity.ok(metrics);
                 });
+    }
+
+    /**
+     * Re-seeds sell-side liquidity for a company by placing a company (treasury) SELL
+     * order for the shares that are unowned but not currently on offer. This restores the
+     * invariant "unowned shares == resting company sell depth", so a company whose IPO wall
+     * was consumed (or whose ownership was reset) becomes buyable again.
+     *
+     * Places min over the books: tops the ask depth up to (totalShares - availableShares)
+     * at the current price (falling back to the initial price). Idempotent-ish: if the ask
+     * wall already covers the unowned shares, it places nothing.
+     */
+    @PostMapping("/{id}/relist")
+    public CompletableFuture<ResponseEntity<Object>> relist(@PathVariable String id) {
+        Companies company = companyService.getCompanyById(id);
+        if (company == null) {
+            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+        }
+        long price = company.getCurrentPrice() > 0 ? company.getCurrentPrice() : company.getInitialPrice();
+        int unowned = company.getTotalShares() - company.getAvailableShares();
+
+        return engineService.getMarketMetrics(id).thenApply(m -> {
+            long currentAsk = (m instanceof MatchingEngine.MarketMetrics mm) ? mm.totalSellShares() : 0L;
+            long toPlace = unowned - currentAsk;
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("status", "ok");
+            body.put("companyId", id);
+            body.put("unowned", unowned);
+            body.put("askDepthBefore", currentAsk);
+
+            if (toPlace <= 0) {
+                body.put("placed", 0);
+                body.put("message", "Ask wall already covers unowned shares; nothing to relist.");
+                return ResponseEntity.ok((Object) body);
+            }
+
+            // Company SELL order (isIpo=true) bypasses the ownership check and is uncancellable.
+            engineService.placeOrder(false, price, (int) toPlace, false, id, true);
+            body.put("placed", toPlace);
+            body.put("price", price);
+            body.put("message", "Relisted unowned shares as a company sell wall.");
+            return ResponseEntity.ok((Object) body);
+        });
     }
 
     @GetMapping("/{id}/orders")

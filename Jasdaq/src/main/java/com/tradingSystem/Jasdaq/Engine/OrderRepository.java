@@ -3,7 +3,6 @@ package com.tradingSystem.Jasdaq.Engine;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 public interface OrderRepository extends JpaRepository<Order, String> {
 
@@ -11,7 +10,8 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
     List<Order> findBySymbolOrderByEntryTimeDesc(String symbol);
 
-    @Query("SELECT AVG(o.eventTime - o.entryTime) FROM Order o WHERE o.status = true AND o.eventTime > 0 AND o.shares = 0")
-    Double getAverageLatency();
+    // Oldest-first: used to rebuild the order book on startup so price-time (FIFO)
+    // priority is preserved (placeOrder appends to the tail of each price level).
+    List<Order> findBySymbolOrderByEntryTimeAsc(String symbol);
 
 }
